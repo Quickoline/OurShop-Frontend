@@ -6,8 +6,11 @@ import { Product, normalizeProduct } from '../data/products';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
 import { reviewApi } from '../services/api';
-import { productApi } from '../services/api';
+import { productApi, serviceApi } from '../services/api';
+import { getCatalogType, isService } from '../data/catalogHelpers';
 import { toast } from 'sonner';
+import { shop } from '../config/shop';
+import { goToCheckout } from '../utils/checkoutAuth';
 
 const TAG_LABELS: Record<string, string> = {
   bestseller: 'Best Seller',
@@ -49,10 +52,20 @@ export function ProductDetail() {
     const fetchProduct = async () => {
       setLoading(true);
 
+      const fromContext = contextProducts.find(
+        (p) => p.slug === slug || p._id === slug || String(p.id) === slug
+      );
+
+      const tryServiceFirst = fromContext ? isService(fromContext) : false;
+
       try {
-        const res = await productApi.getBySlug(slug || '');
+        const primary = tryServiceFirst ? serviceApi : productApi;
+        const res = await primary.getBySlug(slug || '');
         if (res.success && res.data) {
-          setProduct(res.data);
+          setProduct({
+            ...res.data,
+            catalogType: tryServiceFirst ? 'service' : getCatalogType(res.data),
+          });
           setLoading(false);
           return;
         }
@@ -60,15 +73,22 @@ export function ProductDetail() {
         // fall through
       }
 
-      // Fallback: find in already fetched context products only
-      const allProducts = [...contextProducts];
-      const found = allProducts.find(
-        (p) =>
-          p.slug === slug ||
-          p._id === slug ||
-          String(p.id) === slug
-      );
-      setProduct(found || null);
+      try {
+        const secondary = tryServiceFirst ? productApi : serviceApi;
+        const res = await secondary.getBySlug(slug || '');
+        if (res.success && res.data) {
+          setProduct({
+            ...res.data,
+            catalogType: tryServiceFirst ? 'product' : 'service',
+          });
+          setLoading(false);
+          return;
+        }
+      } catch {
+        // fall through
+      }
+
+      setProduct(fromContext || null);
       setLoading(false);
     };
 
@@ -152,7 +172,7 @@ export function ProductDetail() {
           unit: selectedSize.label,
         }
       : product;
-    navigate('/checkout', { state: { buyNowProduct: payload } });
+    goToCheckout(navigate, { buyNowProduct: payload as Product });
   };
 
   const handleWishlist = () => {
@@ -349,7 +369,7 @@ export function ProductDetail() {
           </div>
 
           <p className="text-muted-foreground mb-8 text-lg leading-relaxed">
-            {product.description || `Experience the power of ${np.displayName.toLowerCase()}. Formulated with premium ingredients to support your journey to health and wellness. 100% natural, lab-tested, and trusted by thousands.`}
+            {product.description || `Discover ${np.displayName} from ${shop.name}. Quality you can trust — browse details, reviews, and order with secure checkout.`}
           </p>
 
           <div className="mb-6 rounded-xl border border-border p-4 bg-secondary/20">

@@ -11,16 +11,17 @@ import 'swiper/css/navigation';
 
 export function TestimonialSlider() {
   return (
-    <section className="py-16 bg-white">
-      <div className="container mx-auto px-4">
+    <section className="section-pad bg-card/40">
+      <div className="container mx-auto px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl lg:text-4xl mb-4 text-foreground">What Our Customers Say</h2>
-          <p className="text-muted-foreground">Real stories from real people</p>
+          <span className="section-label">Testimonials</span>
+          <h2 className="section-title">What customers say</h2>
+          <p className="section-subtitle mx-auto mt-3">Real stories from real people</p>
         </motion.div>
 
         <Swiper
@@ -45,7 +46,7 @@ export function TestimonialSlider() {
         >
           {testimonials.map((testimonial) => (
             <SwiperSlide key={testimonial.id}>
-              <div className="bg-accent rounded-2xl p-8 h-full hover:shadow-lg transition-shadow duration-300">
+              <motion.div className="card-surface p-8 h-full">
                 <Quote className="text-primary mb-4" size={40} />
                 
                 <div className="flex items-center mb-4">
@@ -78,7 +79,7 @@ export function TestimonialSlider() {
                     <p className="text-sm text-muted-foreground">Verified Customer</p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </SwiperSlide>
           ))}
         </Swiper>

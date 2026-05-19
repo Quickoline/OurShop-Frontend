@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
+import { shop } from '../config/shop';
 import { ProductCard } from '../components/ProductCard';
 
 export function Wishlist() {
@@ -14,13 +15,13 @@ export function Wishlist() {
         </div>
         <h1 className="text-4xl font-bold text-foreground mb-4">Your Wishlist is Empty</h1>
         <p className="text-muted-foreground text-lg mb-8 max-w-md mx-auto">
-          Save your favorite wellness products here. They'll be waiting for you when you're ready to purchase.
+          Save your favorite {shop.catalog.plural} here. They&apos;ll be waiting when you&apos;re ready to purchase.
         </p>
         <Link 
           to="/shop" 
           className="bg-primary text-primary-foreground px-8 py-3 rounded-xl font-bold text-lg hover:bg-primary/90 transition-all shadow-lg shadow-primary/30"
         >
-          Discover Products
+          Discover {shop.catalog.title}
         </Link>
       </main>
     );

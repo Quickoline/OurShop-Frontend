@@ -39,10 +39,10 @@ export function PaymentMethods() {
           <h2 className="font-bold text-foreground mb-4">Other Payment Options</h2>
           <div className="space-y-3">
             {[
-              { name: 'Cash on Delivery (COD)', desc: 'Pay when you receive your order', active: true },
+              { name: 'Razorpay (Cards & UPI)', desc: 'Secure checkout via Razorpay at order placement', active: true },
               { name: 'UPI Payment', desc: 'Pay using UPI apps like GPay, PhonePe', active: true },
               { name: 'Net Banking', desc: 'Pay using your bank account', active: true },
-              { name: 'Card Wallets', desc: 'More digital methods will be added soon', active: false },
+              { name: 'Debit / Credit Card', desc: 'Visa, Mastercard, RuPay and more', active: true },
             ].map((method) => (
               <div key={method.name} className="flex items-center justify-between bg-gray-50 rounded-xl p-4">
                 <div className="flex items-center gap-3">

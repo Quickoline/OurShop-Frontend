@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Send } from 'lucide-react';
 import { toast } from 'sonner';
+import { shop } from '../config/shop';
 
 export function Newsletter() {
   const [email, setEmail] = useState('');
@@ -15,44 +16,33 @@ export function Newsletter() {
   };
 
   return (
-    <section className="py-16 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-accent via-primary/10 to-accent"></div>
-      
-      <div className="container mx-auto px-4 relative z-10">
+    <section className="section-pad">
+      <div className="container mx-auto px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="max-w-2xl mx-auto text-center"
+          className="card-surface max-w-3xl mx-auto p-8 sm:p-12 text-center"
         >
-          <h2 className="text-3xl lg:text-4xl mb-4 text-foreground">Stay Updated!</h2>
-          <p className="text-muted-foreground mb-8">
-            Subscribe to our newsletter for wellness tips, exclusive offers, and new product launches
+          <h2 className="section-title text-2xl sm:text-3xl">Stay in the loop</h2>
+          <p className="section-subtitle mx-auto mt-3">
+            Get updates from {shop.name} — offers, new {shop.catalog.plural}, and more.
           </p>
 
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4">
+          <form onSubmit={handleSubmit} className="mt-8 flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
             <input
               type="email"
+              placeholder="you@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email address"
-              className="flex-1 px-6 py-4 rounded-xl bg-white border border-border focus:outline-none focus:ring-2 focus:ring-primary"
               required
+              className="input-modern flex-1"
             />
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              type="submit"
-              className="bg-primary text-primary-foreground px-8 py-4 rounded-xl hover:bg-primary/90 transition-all duration-300 flex items-center justify-center gap-2"
-            >
+            <button type="submit" className="btn-primary shrink-0">
               Subscribe
-              <Send size={18} />
-            </motion.button>
+              <Send size={16} />
+            </button>
           </form>
-
-          <p className="text-sm text-muted-foreground mt-4">
-            We respect your privacy. Unsubscribe at any time.
-          </p>
         </motion.div>
       </div>
     </section>

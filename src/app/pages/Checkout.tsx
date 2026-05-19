@@ -3,9 +3,12 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
 import { normalizeProduct, Product } from '../data/products';
-import { orderApi, PAYMENT_BASE, userApi, cartApi, couponApi } from '../services/api';
+import { getCatalogType } from '../data/catalogHelpers';
+import { orderApi, PAYMENT_BASE, userApi } from '../services/api';
+import { consumeBuyNowProduct } from '../utils/checkoutAuth';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { shop } from '../config/shop';
 
 const loadScript = (src: string) => {
   return new Promise((resolve) => {
@@ -42,7 +45,7 @@ const onPayment = async (price: number, itemName: string) => {
       order_id: data.id,
       amount: data.amount,
       currency: "INR",
-      name: "TBS Veda",
+      name: shop.name,
       description: itemName,
       handler: function (response: any) {
         console.log(response);
@@ -81,15 +84,15 @@ export function Checkout() {
   const location = useLocation();
   const { cart } = useShop();
   const { isAuthenticated, user } = useAuth();
-  const buyNowProduct = (location.state as { buyNowProduct?: Product } | null)?.buyNowProduct;
+  const stateBuyNow = (location.state as { buyNowProduct?: Product } | null)?.buyNowProduct;
+  const [buyNowProduct] = useState<Product | null>(() =>
+    consumeBuyNowProduct(stateBuyNow)
+  );
 
   const [loading, setLoading] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState('');
   const [saveAddressForFuture, setSaveAddressForFuture] = useState(false);
-  const [couponCode, setCouponCode] = useState('');
-  const [couponDiscount, setCouponDiscount] = useState(0);
-  const [couponApplied, setCouponApplied] = useState(false);
 
   useEffect(() => {
     loadScript("https://checkout.razorpay.com/v1/checkout.js");
@@ -127,7 +130,7 @@ export function Checkout() {
     const np = normalizeProduct(item);
     return sum + np.displayPrice;
   }, 0);
-  const payableTotal = Math.max(0, total - couponDiscount);
+  const payableTotal = total;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -148,67 +151,34 @@ export function Checkout() {
     }));
   };
 
-  const applyCoupon = async () => {
-    if (!couponCode.trim()) {
-      toast.error('Enter coupon code');
-      return;
-    }
-    try {
-      if (buyNowProduct) {
-        const res = await couponApi.validate(couponCode.trim(), total, false);
-        const discount = Number(res?.data?.discount || 0);
-        setCouponDiscount(discount);
-      } else {
-        const res = await cartApi.applyCoupon(couponCode.trim());
-        const discount = Number(res?.data?.couponDiscount || 0);
-        setCouponDiscount(discount);
-      }
-      setCouponApplied(true);
-      toast.success('Coupon applied');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to apply coupon');
-    }
-  };
-
-  const removeCoupon = async () => {
-    try {
-      if (!buyNowProduct) {
-        await cartApi.removeCoupon();
-      }
-      setCouponDiscount(0);
-      setCouponApplied(false);
-      setCouponCode('');
-      toast.success('Coupon removed');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to remove coupon');
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      if (!isAuthenticated || !user) {
-        toast.error('Please sign in to place order.');
-        navigate('/login?redirect=/checkout');
-        return;
-      }
-
       const authUser = user as any;
       const orderItems = checkoutItems.map((item) => {
         const np = normalizeProduct(item);
-        const productId = np._id || np.displayId;
-        if (!/^[a-f\d]{24}$/i.test(String(productId))) {
-          throw new Error('One or more selected products are invalid. Please refresh and try again.');
+        const refId = np._id || np.displayId;
+        if (!/^[a-f\d]{24}$/i.test(String(refId))) {
+          throw new Error(
+            'One or more selected items are invalid. Please refresh and try again.'
+          );
         }
-        return {
-          product: productId,
+        const itemType = getCatalogType(item);
+        const line: Record<string, unknown> = {
+          itemType,
           title: np.displayName,
           image: np.displayImage || undefined,
           quantity: 1,
           price: np.displayPrice,
         };
+        if (itemType === 'service') {
+          line.service = refId;
+        } else {
+          line.product = refId;
+        }
+        return line;
       });
 
       const orderData = {
@@ -225,7 +195,7 @@ export function Checkout() {
         itemsPrice: total,
         taxPrice: 0,
         shippingPrice: 0,
-        discountPrice: couponDiscount,
+        discountPrice: 0,
         totalPrice: payableTotal,
         paymentMethod: 'RAZORPAY',
       };
@@ -451,32 +421,10 @@ export function Checkout() {
               })}
             </div>
             <div className="border-t border-border pt-4 space-y-2">
-              <div className="flex gap-2 pb-2">
-                <input
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value)}
-                  placeholder="Coupon code"
-                  className="flex-1 border border-border rounded-xl px-3 py-2 text-sm"
-                />
-                <button type="button" onClick={applyCoupon} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium">
-                  Apply
-                </button>
-              </div>
-              {couponApplied && (
-                <button type="button" onClick={removeCoupon} className="text-sm text-red-500 hover:underline">
-                  Remove coupon
-                </button>
-              )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
                 <span className="font-bold">Rs. {total.toFixed(2)}</span>
               </div>
-              {couponDiscount > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Coupon Discount</span>
-                  <span className="font-bold text-emerald-600">-Rs. {couponDiscount.toFixed(2)}</span>
-                </div>
-              )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Shipping</span>
                 <span className="font-bold text-emerald-600">Free</span>

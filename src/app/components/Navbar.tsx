@@ -1,25 +1,26 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search, User, Heart, ShoppingCart, Menu, X, LogOut, ChevronDown, Package, MapPin, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
 import { normalizeProduct } from '../data/products';
 import { orderApi } from '../services/api';
+import { shop, buildNavLinks } from '../config/shop';
 
 export function Navbar() {
   const [navHidden, setNavHidden] = useState(false);
   const lastScrollY = useRef(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isLogoModalOpen, setIsLogoModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
   const [orderCount, setOrderCount] = useState<number | null>(null);
   const [showLoginDropdown, setShowLoginDropdown] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   
-  const { cart, wishlist, products } = useShop();
+  const { cart, wishlist, products, categories } = useShop();
   const { isAuthenticated, user, logout } = useAuth();
 
   useEffect(() => {
@@ -40,13 +41,9 @@ export function Navbar() {
   }, [isAuthenticated, showAccountDropdown]);
 
   useEffect(() => {
-    if (isLogoModalOpen) setNavHidden(false);
-  }, [isLogoModalOpen]);
-
-  useEffect(() => {
     lastScrollY.current = window.scrollY;
     const handleScroll = () => {
-      if (isMobileMenuOpen || isLogoModalOpen) {
+      if (isMobileMenuOpen) {
         setNavHidden(false);
         lastScrollY.current = window.scrollY;
         return;
@@ -65,18 +62,9 @@ export function Navbar() {
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isMobileMenuOpen, isLogoModalOpen]);
+  }, [isMobileMenuOpen]);
 
-  const bottomLinks = [
-    { name: 'HOME', path: '/' },
-    { name: 'FACE', path: '/category/skin' },
-    { name: 'HAIR', path: '/category/hair' },
-    { name: 'MAKEUP', path: '/category/makeup' },
-    { name: 'BODY', path: '/category/body' },
-    { name: 'COMBOS', path: '/category/combos' },
-    { name: 'NEWLY LAUNCHED', path: '/offers/newly-launched' },
-    { name: 'ALL PRODUCTS', path: '/shop' }
-  ];
+  const bottomLinks = buildNavLinks(categories);
 
   const filteredProducts = searchQuery.trim() 
     ? products.filter(p => {
@@ -97,84 +85,55 @@ export function Navbar() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 flex flex-col bg-white shadow-sm transition-transform duration-300 ease-out will-change-transform ${
-        navHidden && !isMobileMenuOpen && !isLogoModalOpen ? '-translate-y-full' : 'translate-y-0'
+      className={`fixed top-0 left-0 right-0 z-50 flex flex-col nav-glass transition-transform duration-300 ease-out will-change-transform ${
+        navHidden && !isMobileMenuOpen ? '-translate-y-full' : 'translate-y-0'
       }`}
     >
 
       {/* Main Middle Bar */}
-      <div className="container mx-auto px-4 py-2 sm:py-2.5">
+      <div className="container mx-auto px-4 sm:px-6 py-3">
         <div className="flex items-center justify-between gap-4 lg:gap-8">
           {/* Mobile Menu Toggle */}
           <div className="lg:hidden flex-none">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-700"
+              className="p-2 hover:bg-secondary rounded-xl transition-colors text-foreground"
             >
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
 
-          {/* Logo */}
-          <div className="flex-none flex items-center relative">
-            <button
-              onClick={() => setIsLogoModalOpen(!isLogoModalOpen)}
-              className="inline-flex items-center gap-2 hover:opacity-90 transition-all duration-200"
-            >
-              <img
-                src="/logo-tbs-veda.png"
-                alt="TBS Veda — The Best Solution"
-                className="h-20 w-auto max-w-[min(90vw,420px)] object-contain object-left sm:h-24 sm:max-w-[520px] lg:h-28 lg:max-w-[680px]"
-              />
-              <div className="hidden sm:flex flex-col leading-tight">
-                <span style={{ fontFamily: "'Playfair Display', Georgia, serif" }} className="text-[1.15rem] lg:text-[1.35rem] font-bold text-[#5B4636] tracking-wide">TBS Veda</span>
-                <span className="text-[0.55rem] lg:text-[0.62rem] font-semibold text-[#b89b7a] tracking-[0.22em] uppercase">The Best Solution</span>
-              </div>
-            </button>
-
-            {/* Logo Popover (appears beside the logo) */}
-            <AnimatePresence>
-              {isLogoModalOpen && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9, y: 8 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, y: 8 }}
-                  transition={{ duration: 0.2, ease: 'easeOut' }}
-                  className="absolute left-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 p-5 z-[100] w-[260px]"
-                >
-                  <button
-                    onClick={() => setIsLogoModalOpen(false)}
-                    className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
-                  >
-                    <X size={16} />
-                  </button>
-                  <img
-                    src="/logo-tbs-veda.png"
-                    alt="TBS Veda — The Best Solution"
-                    className="w-full object-contain"
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          {/* Brand */}
+          <Link
+            to="/"
+            className="flex-none inline-flex flex-col leading-tight hover:opacity-90 transition-opacity"
+          >
+              <span className="font-[family-name:var(--font-display)] text-lg sm:text-xl font-bold text-foreground tracking-tight">
+                {shop.name}
+              </span>
+              <span className="hidden sm:block text-[10px] font-semibold text-muted-foreground tracking-[0.16em] uppercase">
+                {shop.tagline}
+              </span>
+          </Link>
 
           {/* Center Search (Desktop) */}
           <div className="hidden lg:flex flex-1 max-w-3xl items-center relative">
-            <form onSubmit={handleSearch} className="flex w-full border border-gray-300 rounded-md overflow-hidden focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
-              <div className="px-2.5 py-1.5 flex items-center justify-center bg-white text-gray-400">
-                <Search size={17} />
-              </div>
-              <input 
-                type="text" 
-                placeholder="Search for products..." 
+            <form onSubmit={handleSearch} className="flex w-full items-center gap-2 rounded-2xl border border-border bg-input-background pl-4 pr-1.5 py-1.5 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+              <Search size={18} className="text-muted-foreground shrink-0" />
+              <input
+                type="text"
+                placeholder={
+                  shop.isDualCatalog
+                    ? 'Search products & services...'
+                    : `Search ${shop.catalog.plural}...`
+                }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setShowSearchDropdown(true)}
                 onBlur={() => setTimeout(() => setShowSearchDropdown(false), 200)}
-                className="w-full py-1.5 px-2 outline-none text-sm text-gray-700 font-medium" 
+                className="w-full bg-transparent outline-none text-sm text-foreground placeholder:text-muted-foreground"
               />
-              <button type="submit" className="bg-primary text-primary-foreground px-5 sm:px-6 py-1.5 flex items-center gap-1.5 text-sm font-medium hover:bg-primary/90 transition-colors">
-                <Search size={18} />
+              <button type="submit" className="btn-primary !py-2 !px-4 text-sm shrink-0">
                 Search
               </button>
             </form>
@@ -453,7 +412,11 @@ export function Navbar() {
             </div>
             <input 
               type="text" 
-              placeholder="Search for products..." 
+              placeholder={
+                shop.isDualCatalog
+                  ? 'Search products & services...'
+                  : `Search ${shop.catalog.plural}...`
+              } 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => setShowSearchDropdown(true)}
@@ -512,10 +475,16 @@ export function Navbar() {
       </div>
 
       {/* Bottom Link Bar (Desktop) */}
-      <div className="hidden lg:block border-t border-gray-200 bg-white">
-        <div className="container mx-auto px-4 flex items-center justify-center flex-wrap gap-x-5 gap-y-1 py-2 text-xs font-semibold text-gray-600 tracking-wide">
-          {bottomLinks.map(link => (
-            <Link key={link.name} to={link.path} className="hover:text-primary transition-colors whitespace-nowrap">
+      <div className="hidden lg:block border-t border-border/50 bg-foreground">
+        <div className="container mx-auto px-4 sm:px-6 flex items-center justify-center flex-wrap gap-x-6 gap-y-1 py-2.5 text-xs font-semibold text-slate-300 tracking-wide">
+          {bottomLinks.map((link) => (
+            <Link
+              key={link.name}
+              to={link.path}
+              className={`hover:text-white transition-colors whitespace-nowrap ${
+                location.pathname === link.path ? 'text-primary' : ''
+              }`}
+            >
               {link.name}
             </Link>
           ))}

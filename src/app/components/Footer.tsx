@@ -1,25 +1,30 @@
 import { useState } from 'react';
-import { Heart, Mail, X, Instagram, Facebook } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { Heart, Mail, Instagram, Facebook } from 'lucide-react';
 import { newsletterApi } from '../services/api';
+import { useShop } from '../context/ShopContext';
+import { shop, categoryPath } from '../config/shop';
 
 export function Footer() {
-  const [isLogoModalOpen, setIsLogoModalOpen] = useState(false);
+  const { categories } = useShop();
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterStatus, setNewsletterStatus] = useState<
     null | { type: 'success' | 'error'; message: string }
   >(null);
   const [newsletterPreviewUrl, setNewsletterPreviewUrl] = useState<string | null>(null);
+
+  const shopAllLinks =
+    categories.length > 0
+      ? categories.map((category) => ({
+          label: category.name,
+          href: categoryPath(category),
+        }))
+      : [
+          { label: `All ${shop.catalog.title}`, href: '/shop' },
+          { label: 'Categories', href: '/category' },
+        ];
+
   const footerLinks = {
-    shopAll: [
-      { label: 'Daily Essentials', href: '/collection/daily-essentials' },
-      { label: "Men's Wellness", href: '/collection/mens-wellness' },
-      { label: 'Weight Management', href: '/collection/weight-management' },
-      { label: 'Daily Nutrition', href: '/collection/daily-nutrition' },
-      { label: 'Fitness', href: '/collection/fitness' },
-      { label: 'Skincare', href: '/category/skin' },
-      { label: 'Haircare', href: '/category/hair' },
-    ],
+    shopAll: shopAllLinks,
     discover: [
       { label: 'About Us', href: '/discover/about-us' },
       { label: 'Our Doctors', href: '/discover/our-doctors' },
@@ -43,16 +48,16 @@ export function Footer() {
   };
 
   return (
-    <footer className="bg-white border-t border-border">
+    <footer className="bg-foreground text-slate-300 border-t border-white/10 mt-auto">
       <div className="container mx-auto px-4 pt-10 sm:pt-12">
         {/* Top grid (like screenshot) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           <div>
-            <h4 className="text-sm font-bold text-foreground mb-4">Shop All</h4>
+            <h4 className="text-sm font-bold text-white mb-4">Shop All</h4>
             <ul className="space-y-2.5">
               {footerLinks.shopAll.map((l) => (
                 <li key={l.label}>
-                  <a href={l.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <a href={l.href} className="text-sm text-slate-400 hover:text-primary transition-colors">
                     {l.label}
                   </a>
                 </li>
@@ -61,11 +66,11 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="text-sm font-bold text-foreground mb-4">Discover</h4>
+            <h4 className="text-sm font-bold text-white mb-4">Discover</h4>
             <ul className="space-y-2.5">
               {footerLinks.discover.map((l) => (
                 <li key={l.label}>
-                  <a href={l.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <a href={l.href} className="text-sm text-slate-400 hover:text-primary transition-colors">
                     {l.label}
                   </a>
                 </li>
@@ -74,11 +79,11 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="text-sm font-bold text-foreground mb-4">Offers</h4>
+            <h4 className="text-sm font-bold text-white mb-4">Offers</h4>
             <ul className="space-y-2.5">
               {footerLinks.offers.map((l) => (
                 <li key={l.label}>
-                  <a href={l.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <a href={l.href} className="text-sm text-slate-400 hover:text-primary transition-colors">
                     {l.label}
                   </a>
                 </li>
@@ -88,7 +93,7 @@ export function Footer() {
 
           {/* Newsletter + contact + social */}
           <div className="lg:pl-6">
-            <h4 className="text-sm font-bold text-foreground mb-3">No Spam, Only Happiness</h4>
+            <h4 className="text-sm font-bold text-white mb-3">Join our newsletter</h4>
             <form
               onSubmit={async (e) => {
                 e.preventDefault();
@@ -129,11 +134,11 @@ export function Footer() {
                   if (newsletterStatus) setNewsletterStatus(null);
                   if (newsletterPreviewUrl) setNewsletterPreviewUrl(null);
                 }}
-                className="w-full h-11 px-4 rounded-lg border border-gray-200 bg-white outline-none focus:border-primary transition-colors text-sm"
+                className="w-full h-11 px-4 rounded-xl border border-white/15 bg-white/5 text-white placeholder:text-slate-500 outline-none focus:border-primary transition-colors text-sm"
               />
               <button
                 type="submit"
-                className="h-11 rounded-lg bg-primary text-primary-foreground font-semibold tracking-[0.18em] text-xs hover:bg-primary/90 transition-colors"
+                className="h-11 rounded-xl bg-primary text-primary-foreground font-semibold tracking-[0.12em] text-xs hover:bg-primary/90 transition-colors"
               >
                 SUBSCRIBE
               </button>
@@ -164,17 +169,17 @@ export function Footer() {
               <div className="flex items-center gap-2">
                 <Mail size={16} className="text-foreground/70" />
                 <a
-                  href="mailto:support@tbsveda.com"
+                  href={`mailto:${shop.supportEmail}`}
                   className="break-all hover:text-primary transition-colors"
                 >
-                  support@tbsveda.com
+                  {shop.supportEmail}
                 </a>
               </div>
             </div>
 
             <div className="mt-6">
-              <h4 className="text-sm font-bold text-foreground mb-3">Show Us Some Love</h4>
-              <div className="flex items-center gap-4 text-muted-foreground">
+              <h4 className="text-sm font-bold text-white mb-3">Follow us</h4>
+              <div className="flex items-center gap-4 text-slate-400">
                 <a
                   href="https://www.instagram.com/"
                   target="_blank"
@@ -199,7 +204,7 @@ export function Footer() {
                   rel="noreferrer"
                   className="text-sm font-medium tracking-[0.12em] uppercase hover:text-primary transition-colors"
                 >
-                  @tbsveda
+                  @{shop.socialHandle}
                 </a>
               </div>
             </div>
@@ -207,10 +212,10 @@ export function Footer() {
         </div>
 
         {/* Divider */}
-        <div className="mt-10 border-t border-gray-200" />
+        <div className="mt-10 border-t border-white/10" />
 
         {/* Bottom links row */}
-        <div className="py-6 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-sm text-muted-foreground">
+        <div className="py-6 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-sm text-slate-500">
           {footerLinks.bottom.map((l, idx) => (
             <div key={l.label} className="flex items-center gap-3">
               <a href={l.href} className="hover:text-primary transition-colors">
@@ -224,35 +229,6 @@ export function Footer() {
         </div>
       </div>
 
-      {/* Logo Modal */}
-      <AnimatePresence>
-        {isLogoModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
-            onClick={() => setIsLogoModalOpen(false)}
-          >
-            <button 
-              onClick={() => setIsLogoModalOpen(false)}
-              className="absolute top-4 right-4 text-white hover:text-primary transition-colors p-2 bg-black/50 rounded-full"
-            >
-              <X size={32} />
-            </button>
-            <motion.img
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              src="/logo-tbs-veda.png"
-              alt="TBS Veda — The Best Solution" 
-              className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
     </footer>
   );
 }

@@ -71,6 +71,32 @@ export const productApi = {
     request<any>(`/api/product/search?q=${encodeURIComponent(q)}&limit=${limit}`),
 };
 
+// ── Service API (mirrors product) ────────────────────────
+export const serviceApi = {
+  getAll: (params?: Record<string, string>) => {
+    const query = params ? '?' + new URLSearchParams(params).toString() : '';
+    return request<any>(`/api/service${query}`);
+  },
+  getById: (id: string) => request<any>(`/api/service/${id}`),
+  getBySlug: (slug: string) => request<any>(`/api/service/slug/${slug}`),
+  getFeatured: (limit = 8) =>
+    request<any>(`/api/service/featured?limit=${limit}`),
+  getBestSellers: (limit = 8) =>
+    request<any>(`/api/service/bestsellers?limit=${limit}`),
+  getNewlyLaunched: (limit = 8) =>
+    request<any>(`/api/service/newlylaunched?limit=${limit}`),
+  getMegaOffers: (limit = 8) =>
+    request<any>(`/api/service/megaoffers?limit=${limit}`),
+  getByCategory: (categoryId: string, params?: Record<string, string>) => {
+    const query = params ? '?' + new URLSearchParams(params).toString() : '';
+    return request<any>(`/api/service/category/${categoryId}${query}`);
+  },
+  getRelated: (id: string, limit = 4) =>
+    request<any>(`/api/service/${id}/related?limit=${limit}`),
+  search: (q: string, limit = 10) =>
+    request<any>(`/api/service/search?q=${encodeURIComponent(q)}&limit=${limit}`),
+};
+
 // ── Category API ─────────────────────────────────────────
 export const categoryApi = {
   getAll: () => request<any>('/api/category'),
@@ -124,19 +150,21 @@ export const userApi = {
 // ── Cart API ─────────────────────────────────────────────
 export const cartApi = {
   get: () => request<any>('/api/cart'),
-  add: (productId: string, quantity = 1) =>
+  add: (
+    itemId: string,
+    quantity = 1,
+    itemType: 'product' | 'service' = 'product'
+  ) =>
     request<any>('/api/cart/add', {
       method: 'POST',
-      body: JSON.stringify({ productId, quantity }),
+      body: JSON.stringify(
+        itemType === 'service'
+          ? { serviceId: itemId, itemType: 'service', quantity }
+          : { productId: itemId, itemType: 'product', quantity }
+      ),
     }),
   remove: (productId: string) =>
     request<any>(`/api/cart/remove/${productId}`, { method: 'DELETE' }),
-  applyCoupon: (code: string) =>
-    request<any>('/api/cart/apply-coupon', {
-      method: 'POST',
-      body: JSON.stringify({ code }),
-    }),
-  removeCoupon: () => request<any>('/api/cart/coupon', { method: 'DELETE' }),
   clear: () => request<any>('/api/cart/clear', { method: 'DELETE' }),
 };
 
@@ -165,14 +193,6 @@ export const orderApi = {
   getById: (id: string) => request<any>(`/api/order/${id}`),
   cancel: (id: string) =>
     request<any>(`/api/order/${id}/cancel`, { method: 'PATCH' }),
-};
-
-export const couponApi = {
-  validate: (code: string, orderTotal: number, isNewUser = false) =>
-    request<any>('/api/coupon/validate', {
-      method: 'POST',
-      body: JSON.stringify({ code, orderTotal, isNewUser }),
-    }),
 };
 
 // ── Review API ───────────────────────────────────────────

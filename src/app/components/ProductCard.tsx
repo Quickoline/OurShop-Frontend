@@ -1,9 +1,11 @@
 import { useNavigate } from 'react-router-dom';
-import { Heart, ShoppingCart, Eye, Star } from 'lucide-react';
+import { Heart, ShoppingCart, Star } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Product, normalizeProduct } from '../data/products';
+import { isService } from '../data/catalogHelpers';
 import { useShop } from '../context/ShopContext';
 import { toast } from 'sonner';
+import { goToCheckout } from '../utils/checkoutAuth';
 
 interface ProductCardProps {
   product: Product;
@@ -17,145 +19,136 @@ export function ProductCard({ product }: ProductCardProps) {
   const productSlug = np.slug || np.displayId;
   const isWishlisted = isInWishlist(pid);
   const quantity = Number(product.quantity || 0);
-  const isOutOfStock = quantity <= 0;
+  const service = isService(product);
+  const isOutOfStock = !service && quantity <= 0;
 
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     toggleWishlist(product);
-    if (!isWishlisted) {
-      toast.success(`${np.displayName} added to wishlist`);
-    } else {
-      toast.info(`${np.displayName} removed from wishlist`);
-    }
+    toast.success(isWishlisted ? 'Removed from wishlist' : 'Added to wishlist');
   };
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     addToCart(product);
-    toast.success(`${np.displayName} added to cart`);
+    toast.success('Added to cart');
   };
 
   const handleBuyNow = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    navigate('/checkout', { state: { buyNowProduct: product } });
+    goToCheckout(navigate, { buyNowProduct: product });
   };
 
   return (
-    <motion.div
-      whileHover={{ y: -8 }}
+    <motion.article
+      whileHover={{ y: -4 }}
       onClick={() => navigate(`/product/${productSlug}`)}
-      className="group bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer flex flex-col h-full"
+      className="group card-surface-hover cursor-pointer flex flex-col h-full overflow-hidden"
     >
-      <div className="relative overflow-hidden">
-        {/* Product Image */}
-        <div className="block aspect-square overflow-hidden bg-secondary">
-          <img
-            src={np.displayImage}
-            alt={np.displayName}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            loading="lazy"
-          />
-        </div>
+      <motion.div className="relative aspect-[4/5] overflow-hidden bg-secondary">
+        <img
+          src={np.displayImage}
+          alt={np.displayName}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          loading="lazy"
+        />
 
-        {/* Badges */}
-        {product.badge && (
-          <div className="absolute top-4 left-4 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm">
-            {product.badge}
-          </div>
-        )}
-        {np.displayDiscount > 0 && (
-          <div className="absolute top-4 right-4 bg-destructive text-white px-3 py-1 rounded-full text-sm">
-            -{np.displayDiscount}%
-          </div>
-        )}
-
-        {/* Quick Actions */}
-        <div className="absolute inset-x-0 bottom-0 flex gap-2 p-4 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <button
-            onClick={handleWishlist}
-            className={`flex-1 ${
-              isWishlisted ? 'bg-primary' : 'bg-white'
-            } ${
-              isWishlisted ? 'text-white' : 'text-foreground'
-            } py-2 rounded-lg hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2`}
-          >
-            <Heart size={18} fill={isWishlisted ? 'currentColor' : 'none'} />
-          </button>
-          <button 
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              navigate(`/product/${productSlug}`);
-            }}
-            className="flex-1 bg-white text-foreground py-2 rounded-lg hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
-          >
-            <Eye size={18} />
-          </button>
-        </div>
-      </div>
-
-      {/* Product Info */}
-      <div className="p-4 flex flex-col flex-1">
-        <div className="block">
-          <h3 className="mb-2 text-foreground line-clamp-2 min-h-[3rem] group-hover:text-primary transition-colors">
-            {np.displayName}
-          </h3>
-          <span className={`inline-flex px-2 py-0.5 rounded-full text-xs mb-2 ${isOutOfStock ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-700'}`}>
-            {isOutOfStock ? 'Out of Stock' : 'In Stock'}
+        {service && (
+          <span className="absolute top-3 left-3 badge-pill bg-indigo-600 text-white">
+            Service
           </span>
-        </div>
+        )}
+        {!service && np.displayDiscount > 0 && (
+          <span className="absolute top-3 left-3 badge-pill bg-destructive text-destructive-foreground">
+            -{np.displayDiscount}%
+          </span>
+        )}
 
-        {/* Rating */}
-        <div className="flex items-center gap-2 mb-3">
-          <div className="flex items-center">
+        <button
+          type="button"
+          onClick={handleWishlist}
+          className={`absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md transition-all ${
+            isWishlisted
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-card/90 text-foreground hover:bg-primary hover:text-primary-foreground'
+          }`}
+          aria-label="Wishlist"
+        >
+          <Heart size={18} fill={isWishlisted ? 'currentColor' : 'none'} />
+        </button>
+
+        <div className="absolute inset-x-0 bottom-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            disabled={isOutOfStock}
+            className="w-full flex items-center justify-center gap-2 rounded-xl bg-foreground text-background py-2.5 text-sm font-semibold disabled:opacity-50"
+          >
+            <ShoppingCart size={16} />
+            {service ? 'Book' : 'Quick add'}
+          </button>
+        </div>
+      </motion.div>
+
+      <div className="p-4 sm:p-5 flex flex-col flex-1">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+          {typeof product.category === 'string'
+            ? product.category
+            : product.category?.name || 'Catalog'}
+        </p>
+
+        <h3 className="font-semibold text-foreground line-clamp-2 min-h-[2.75rem] group-hover:text-primary transition-colors">
+          {np.displayName}
+        </h3>
+
+        <div className="flex items-center gap-1.5 mt-2">
+          <div className="flex">
             {[...Array(5)].map((_, i) => (
               <Star
                 key={i}
-                size={14}
+                size={12}
                 className={
                   i < Math.floor(np.displayRating)
-                    ? 'fill-yellow-400 text-yellow-400'
-                    : 'text-gray-300'
+                    ? 'fill-amber-400 text-amber-400'
+                    : 'text-muted'
                 }
               />
             ))}
           </div>
-          <span className="text-sm text-muted-foreground">
-            ({np.displayReviews})
-          </span>
+          <span className="text-xs text-muted-foreground">({np.displayReviews})</span>
         </div>
 
-        {/* Price */}
-        <div className="flex items-center gap-2 mb-4 mt-auto">
-          <span className="text-xl text-primary">Rs. {np.displayPrice}</span>
+        <div className="flex items-baseline gap-2 mt-3">
+          <span className="text-xl font-bold text-foreground">₹{np.displayPrice}</span>
           {np.displayOriginalPrice && np.displayOriginalPrice > np.displayPrice && (
             <span className="text-sm text-muted-foreground line-through">
-              Rs. {np.displayOriginalPrice}
+              ₹{np.displayOriginalPrice}
             </span>
           )}
         </div>
 
-        <div className="flex gap-2">
-          <button 
-            onClick={handleAddToCart}
-            disabled={isOutOfStock}
-            className="flex-1 bg-secondary text-foreground py-3 rounded-xl hover:bg-secondary/80 transition-all duration-300 hover:shadow-md flex items-center justify-center gap-2"
-            title="Add to Cart"
-          >
-            <ShoppingCart size={18} />
-          </button>
-          <button 
-            onClick={handleBuyNow}
-            disabled={isOutOfStock}
-            className="flex-[2] bg-primary text-primary-foreground py-3 rounded-xl font-bold hover:bg-primary/90 transition-all duration-300 hover:shadow-lg flex items-center justify-center gap-2"
-          >
-            Buy Now
-          </button>
-        </div>
+        <span
+          className={`mt-2 self-start badge-pill ${
+            isOutOfStock
+              ? 'bg-destructive/10 text-destructive'
+              : 'bg-accent text-accent-foreground'
+          }`}
+        >
+          {service ? 'Available' : isOutOfStock ? 'Out of stock' : 'In stock'}
+        </span>
+
+        <button
+          type="button"
+          onClick={handleBuyNow}
+          disabled={isOutOfStock}
+          className="mt-4 w-full btn-primary py-2.5 text-sm disabled:opacity-50"
+        >
+          {service ? 'Book now' : 'Buy now'}
+        </button>
       </div>
-    </motion.div>
+    </motion.article>
   );
 }

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { shop } from '../config/shop';
 import { MessageCircle, Mail, MapPin } from 'lucide-react';
 
 export function ContactUs() {
@@ -23,7 +24,7 @@ export function ContactUs() {
               <Mail size={18} />
             </div>
             <p className="text-sm font-bold text-gray-800">Email</p>
-            <p className="text-sm text-muted-foreground mt-1">support@tbsveda.com</p>
+            <p className="text-sm text-muted-foreground mt-1">{shop.supportEmail}</p>
           </div>
           <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-3">

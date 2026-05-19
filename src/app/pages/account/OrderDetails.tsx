@@ -90,14 +90,23 @@ export function OrderDetails() {
               {items.map((item: any, idx: number) => (
                 <div key={idx} className="flex items-center gap-4 bg-gray-50 rounded-xl p-4">
                   <div className="w-16 h-16 bg-gray-200 rounded-xl overflow-hidden flex-shrink-0">
-                    {item.image ? (
-                      <img src={item.image} alt={item.title || item.name} className="w-full h-full object-cover" />
+                    {(item.image || item.product?.imgCover || item.service?.imgCover) ? (
+                      <img
+                        src={item.image || item.product?.imgCover || item.service?.imgCover}
+                        alt={item.title || item.name}
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-400"><Package size={24} /></div>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-gray-800 text-sm">{item.title || item.name || `Item #${idx + 1}`}</p>
+                    {(item.itemType === 'service' || item.service) && (
+                      <span className="inline-block mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                        Service
+                      </span>
+                    )}
                     <div className="flex gap-3 mt-1 text-xs text-muted-foreground">
                       <span>Qty: <strong className="text-gray-700">{item.quantity}</strong></span>
                       {item.color && <span>Color: <strong className="text-gray-700">{item.color}</strong></span>}
@@ -204,7 +213,7 @@ export function OrderDetails() {
             <div className="text-sm space-y-1.5">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Method</span>
-                <span className="font-medium">{order.paymentMethod || 'COD'}</span>
+                <span className="font-medium">{order.paymentMethod || 'Online'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Status</span>

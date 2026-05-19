@@ -4,14 +4,18 @@ import { motion } from 'motion/react';
 import { ProductCard } from '../components/ProductCard';
 import { normalizeProduct, Product } from '../data/products';
 import { useShop } from '../context/ShopContext';
-import { productApi } from '../services/api';
+import { productApi, serviceApi } from '../services/api';
+import { shop, catalogCount } from '../config/shop';
 
 const COLLECTIONS: Record<string, { title: string; query: string }> = {
-  'daily-essentials': { title: 'Daily Essentials', query: 'daily essentials' },
-  'mens-wellness': { title: "Men's Wellness", query: "men's wellness" },
-  'weight-management': { title: 'Weight Management', query: 'weight management' },
-  'daily-nutrition': { title: 'Daily Nutrition', query: 'daily nutrition' },
-  fitness: { title: 'Fitness', query: 'fitness' },
+  electronics: { title: 'Electronics', query: 'electronics' },
+  fashion: { title: 'Fashion', query: 'fashion' },
+  home: { title: 'Home & Living', query: 'home' },
+  beauty: { title: 'Beauty', query: 'beauty' },
+  sports: { title: 'Sports', query: 'sports' },
+  books: { title: 'Books', query: 'books' },
+  'daily-essentials': { title: 'Daily Essentials', query: 'bottle essentials' },
+  'gift-ideas': { title: 'Gift Ideas', query: 'gift combo' },
 };
 
 export function Collection() {
@@ -29,9 +33,20 @@ export function Collection() {
 
       try {
         if (q) {
-          const res = await productApi.search(q, 50);
-          if (res.success && Array.isArray(res.data)) {
-            setDisplayProducts(res.data);
+          const [productRes, serviceRes] = await Promise.all([
+            productApi.search(q, 50),
+            serviceApi.search(q, 50).catch(() => ({ success: false, data: [] })),
+          ]);
+          const merged = [
+            ...(productRes.success && Array.isArray(productRes.data)
+              ? productRes.data.map((p: Product) => ({ ...p, catalogType: 'product' as const }))
+              : []),
+            ...(serviceRes.success && Array.isArray(serviceRes.data)
+              ? serviceRes.data.map((p: Product) => ({ ...p, catalogType: 'service' as const }))
+              : []),
+          ];
+          if (merged.length > 0) {
+            setDisplayProducts(merged);
             setLoading(false);
             return;
           }
@@ -90,15 +105,15 @@ export function Collection() {
       <div className="mb-10">
         <h1 className="text-4xl font-bold text-foreground mb-4">{collection.title}</h1>
         <p className="text-muted-foreground text-lg">
-          {loading ? 'Loading...' : `${displayProducts.length} product${displayProducts.length !== 1 ? 's' : ''} found`}
+          {loading ? 'Loading...' : `${catalogCount(displayProducts.length)} found`}
         </p>
       </div>
 
       {displayProducts.length === 0 && !loading ? (
         <div className="text-center py-20">
-          <p className="text-xl text-muted-foreground">No products found</p>
+          <p className="text-xl text-muted-foreground">No {shop.catalog.plural} found</p>
           <Link to="/shop" className="text-primary hover:underline font-medium block mt-3">
-            Browse all products →
+            Browse all {shop.catalog.plural} →
           </Link>
         </div>
       ) : (

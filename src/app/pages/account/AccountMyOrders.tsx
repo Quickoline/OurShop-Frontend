@@ -309,7 +309,7 @@ export function AccountMyOrders() {
                               <CreditCard size={12} /> Payment
                             </h5>
                             <p className="text-sm text-gray-700">
-                              Method: <strong>{order.paymentMethod || 'COD'}</strong>
+                              Method: <strong>{order.paymentMethod || 'Online'}</strong>
                             </p>
                             <p className="text-sm text-gray-700 mt-1">
                               Status: <strong className={order.isPaid ? 'text-emerald-600' : 'text-amber-600'}>{order.isPaid ? 'Paid' : 'Pending'}</strong>

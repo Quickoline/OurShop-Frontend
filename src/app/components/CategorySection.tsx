@@ -1,50 +1,52 @@
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { useShop } from '../context/ShopContext';
+import { SectionHeader } from './SectionHeader';
+import { shop, categoryPath } from '../config/shop';
 
 export function CategorySection() {
   const navigate = useNavigate();
   const { categories } = useShop();
 
   return (
-    <section className="py-16 bg-white">
-      <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-3xl lg:text-4xl mb-4 text-foreground">Shop by Category</h2>
-          <p className="text-muted-foreground">Find the perfect products for your wellness journey</p>
-        </motion.div>
+    <section className="section-pad bg-card/50">
+      <div className="container mx-auto px-4 sm:px-6">
+        <SectionHeader
+          label="Browse"
+          title="Shop by category"
+          subtitle={
+            shop.isDualCatalog
+              ? `Products to buy and services to book — all at ${shop.name}`
+              : `Find the right ${shop.catalog.plural} for you at ${shop.name}`
+          }
+        />
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
           {categories.map((category, index) => (
-            <motion.div
+            <motion.button
               key={category._id || category.id}
-              initial={{ opacity: 0, y: 30 }}
+              type="button"
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              onClick={() => navigate(`/category/${(category.slug || category.name).toLowerCase()}`)}
-              className="group cursor-pointer"
+              transition={{ delay: index * 0.05 }}
+              onClick={() => navigate(categoryPath(category))}
+              className="group text-left card-surface-hover overflow-hidden p-0"
             >
-              <div className="relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300">
-                <div className="aspect-square overflow-hidden">
-                  <img
-                    src={category.image}
-                    alt={category.name}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    loading="lazy"
-                  />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-end p-4">
-                  <h3 className="text-white text-lg">{category.name}</h3>
-                </div>
-                <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors duration-300"></div>
+              <div className="aspect-square overflow-hidden bg-secondary">
+                <img
+                  src={category.image}
+                  alt={category.name}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  loading="lazy"
+                />
               </div>
-            </motion.div>
+              <div className="p-4">
+                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                  {category.name}
+                </h3>
+              </div>
+            </motion.button>
           ))}
         </div>
       </div>

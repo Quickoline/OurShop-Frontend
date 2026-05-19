@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { shop } from '../config/shop';
 import { Package, Search, Truck, CheckCircle2, Clock, XCircle, ChevronDown, ChevronUp, User, MapPin, CreditCard, RotateCcw, Star } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { orderApi } from '../services/api';
@@ -189,7 +190,7 @@ export function MyOrders() {
           </h2>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
             {activeTab === 'all'
-              ? 'Start shopping and discover our premium wellness products.'
+              ? `Start shopping and discover ${shop.catalog.plural} from ${shop.name}.`
               : 'You don\'t have any orders with this status.'
             }
           </p>
@@ -377,7 +378,7 @@ export function MyOrders() {
                               <CreditCard size={13} /> Payment
                             </h5>
                             <p className="text-sm text-gray-700">
-                              Method: <strong>{order.paymentMethod || 'Cash on Delivery'}</strong>
+                              Method: <strong>{order.paymentMethod || 'Online'}</strong>
                             </p>
                             <p className="text-sm text-gray-700 mt-1">
                               Status: <strong className={order.isPaid ? 'text-emerald-600' : 'text-amber-600'}>{order.isPaid ? 'Paid' : 'Pending'}</strong>

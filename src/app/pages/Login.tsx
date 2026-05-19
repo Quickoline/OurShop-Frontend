@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { shop } from '../config/shop';
 
 
 function deriveSignUp(pathname: string, queryMode: string | null): boolean {
@@ -102,14 +103,15 @@ export function Login() {
   };
 
   return (
-    <main className="container mx-auto px-4 py-32 min-h-screen flex items-center justify-center">
-      <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-sm border border-border">
+    <main className="page-shell flex items-center justify-center">
+      <div className="w-full max-w-md card-surface p-8 sm:p-10">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            {isSignUp ? 'Create Account' : 'Welcome Back'}
+          <span className="section-label">{shop.name}</span>
+          <h1 className="section-title text-3xl">
+            {isSignUp ? 'Create account' : 'Welcome back'}
           </h1>
           <p className="text-muted-foreground">
-            {isSignUp ? 'Join TBS Veda today' : 'Sign in to your TBS Veda account'}
+            {isSignUp ? `Join ${shop.name} today` : `Sign in to your ${shop.name} account`}
           </p>
         </div>
 
@@ -131,7 +133,7 @@ export function Login() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full p-3 bg-secondary/30 border border-border rounded-xl outline-none focus:border-primary transition-colors"
+                className="input-modern"
               />
             </div>
           )}
@@ -143,7 +145,7 @@ export function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full p-3 bg-secondary/30 border border-border rounded-xl outline-none focus:border-primary transition-colors"
+              className="input-modern"
             />
           </div>
           <div>
@@ -161,7 +163,7 @@ export function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full p-3 pr-12 bg-secondary/30 border border-border rounded-xl outline-none focus:border-primary transition-colors"
+                className="input-modern pr-12"
               />
               <button
                 type="button"

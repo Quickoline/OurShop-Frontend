@@ -1,85 +1,39 @@
-import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { ArrowRight, Tag } from 'lucide-react';
+import { shop } from '../config/shop';
 
 export function OfferBanner() {
-  const navigate = useNavigate();
-  const [timeLeft, setTimeLeft] = useState({
-    hours: 24,
-    minutes: 30,
-    seconds: 45
-  });
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev.seconds > 0) {
-          return { ...prev, seconds: prev.seconds - 1 };
-        } else if (prev.minutes > 0) {
-          return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
-        } else if (prev.hours > 0) {
-          return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        }
-        return prev;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
   return (
-    <section className="py-16 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/90 to-primary"></div>
-      <div
-        className="absolute inset-0 opacity-10"
-        style={{
-          backgroundImage: 'url(https://images.unsplash.com/photo-1642425777032-0b2249756797?w=1200)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        }}
-      ></div>
-
-      <div className="container mx-auto px-4 relative z-10">
+    <section className="section-pad">
+      <div className="container mx-auto px-4 sm:px-6">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, scale: 0.98 }}
+          whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="text-center text-white"
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-teal-600 to-indigo-600 p-8 sm:p-12 lg:p-14"
         >
-          <h2 className="text-3xl lg:text-5xl mb-4">Mega Flash Sale!</h2>
-          <p className="text-xl mb-8 opacity-90">
-            Get up to 60% OFF on selected wellness products
-          </p>
-
-          {/* Countdown Timer */}
-          <div className="flex justify-center gap-4 mb-8">
-            {[
-              { label: 'Hours', value: timeLeft.hours },
-              { label: 'Minutes', value: timeLeft.minutes },
-              { label: 'Seconds', value: timeLeft.seconds }
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="bg-white/20 backdrop-blur-md rounded-xl p-4 min-w-[80px]"
-              >
-                <div className="text-3xl lg:text-4xl">
-                  {item.value.toString().padStart(2, '0')}
-                </div>
-                <div className="text-sm opacity-80">{item.label}</div>
-              </div>
-            ))}
+          <div className="mesh-blob w-64 h-64 bg-white top-0 right-0 opacity-20" />
+          <div className="relative z-10 max-w-xl">
+            <span className="badge-pill bg-white/20 text-white border border-white/30 mb-4">
+              <Tag size={14} className="inline mr-1" />
+              Limited offer
+            </span>
+            <h2 className="font-[family-name:var(--font-display)] text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight">
+              Up to 60% off selected{' '}
+              {shop.isDualCatalog ? 'products & services' : shop.catalog.plural}
+            </h2>
+            <p className="mt-4 text-white/85 text-lg">
+              Don&apos;t miss exclusive deals on products and bookable services at {shop.name}.
+            </p>
+            <Link
+              to="/offers/mega-offers"
+              className="inline-flex items-center gap-2 mt-8 rounded-xl bg-white text-foreground font-bold px-8 py-3.5 hover:bg-white/90 transition-all shadow-lg"
+            >
+              View offers
+              <ArrowRight size={18} />
+            </Link>
           </div>
-
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate('/shop')}
-            className="bg-white text-primary px-8 py-4 rounded-xl hover:shadow-2xl transition-all duration-300 inline-flex items-center gap-2"
-          >
-            Shop Now
-            <ArrowRight size={20} />
-          </motion.button>
         </motion.div>
       </div>
     </section>
