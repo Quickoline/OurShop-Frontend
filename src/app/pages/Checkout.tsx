@@ -4,80 +4,12 @@ import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
 import { normalizeProduct, Product } from '../data/products';
 import { getCatalogType } from '../data/catalogHelpers';
-import { orderApi, PAYMENT_BASE, userApi } from '../services/api';
+import { orderApi, userApi } from '../services/api';
 import { consumeBuyNowProduct } from '../utils/checkoutAuth';
 import { toast } from 'sonner';
-import axios from 'axios';
-import { shop } from '../config/shop';
+import { QrCode } from 'lucide-react';
 
-const loadScript = (src: string) => {
-  return new Promise((resolve) => {
-    const script = document.createElement('script');
-    script.src = src;
-    script.onload = () => {
-      resolve(true);
-    };
-    script.onerror = () => {
-      resolve(false);
-    };
-    document.body.appendChild(script);
-  });
-};
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('auth_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
-
-const onPayment = async (price: number, itemName: string) => {
-  try {
-    const res = await axios.post(
-      `${PAYMENT_BASE}/create-order`,
-      { amount: price, currency: 'INR', receipt: `receipt_${Date.now()}` },
-      { headers: getAuthHeaders() }
-    );
-    const data = res.data.data;
-
-    console.log(data);
-
-    const paymentObject = new (window as any).Razorpay({
-      key: data.key_id,
-      order_id: data.id,
-      amount: data.amount,
-      currency: "INR",
-      name: shop.name,
-      description: itemName,
-      handler: function (response: any) {
-        console.log(response);
-
-        const verifyData = {
-          paymentId: data.id,
-          razorpayOrderId: response.razorpay_order_id,
-          razorpayPaymentId: response.razorpay_payment_id,
-          razorpaySignature: response.razorpay_signature,
-        };
-
-        axios.post(`${PAYMENT_BASE}/verify`, verifyData, {
-          headers: getAuthHeaders(),
-        }).then((res) => {
-          console.log(res.data);
-          if (res?.data?.success) {
-            alert("Payment successful");
-          } else {
-            alert("Payment failed");
-          }
-        }).catch((err) => {
-          console.log(err);
-        });
-      }
-    });
-
-    paymentObject.open();
-  } catch (error) {
-    console.log(error);
-  }
-}
-
+const QR_IMAGE_URL = '/qr%20shop.jpeg';
 
 export function Checkout() {
   const navigate = useNavigate();
@@ -93,10 +25,6 @@ export function Checkout() {
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState('');
   const [saveAddressForFuture, setSaveAddressForFuture] = useState(false);
-
-  useEffect(() => {
-    loadScript("https://checkout.razorpay.com/v1/checkout.js");
-  }, []);
 
   useEffect(() => {
     const loadSavedAddresses = async () => {
@@ -197,7 +125,8 @@ export function Checkout() {
         shippingPrice: 0,
         discountPrice: 0,
         totalPrice: payableTotal,
-        paymentMethod: 'RAZORPAY',
+        paymentMethod: 'UPI',
+        isPaid: false,
       };
 
       if (saveAddressForFuture) {
@@ -228,11 +157,16 @@ export function Checkout() {
         }
       }
 
-      await orderApi.create(orderData);
-      await onPayment(payableTotal, 'Order Payment');
-      toast.success('Order created successfully. Redirecting to payment...');
+      const created = await orderApi.create(orderData);
+      const createdOrder = created?.data ?? created;
+      const shopOrderId = createdOrder?._id || createdOrder?.id;
 
-      navigate('/');
+      toast.success('Order placed. Complete UPI payment using the QR code.');
+      if (shopOrderId) {
+        navigate(`/order-success/${shopOrderId}`);
+      } else {
+        navigate('/account/orders');
+      }
     } catch (err: any) {
       toast.error(err.message || 'Failed to place order');
     } finally {
@@ -259,7 +193,6 @@ export function Checkout() {
       <h1 className="text-4xl font-bold text-foreground mb-10">Checkout</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        {/* Shipping Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="bg-white p-6 sm:p-8 rounded-3xl border border-border shadow-sm">
             <h2 className="text-2xl font-bold mb-6">Shipping Details</h2>
@@ -388,6 +321,30 @@ export function Checkout() {
             </div>
           </div>
 
+          <div className="bg-white p-6 sm:p-8 rounded-3xl border-2 border-primary/20 shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <QrCode className="text-primary" size={22} />
+              <h2 className="text-xl font-bold text-foreground">Pay with UPI (PhonePe)</h2>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Scan the QR code and pay <strong className="text-foreground">Rs. {payableTotal.toFixed(2)}</strong> before
+              placing your order. Use the same amount shown below.
+            </p>
+            <div className="flex flex-col items-center bg-secondary/20 rounded-2xl p-4 border border-border">
+              <img
+                src={QR_IMAGE_URL}
+                alt="PhonePe QR code — scan to pay"
+                className="w-full max-w-[280px] rounded-xl shadow-md bg-white"
+              />
+              <p className="mt-4 text-center text-sm font-semibold text-foreground">
+                Amount to pay: <span className="text-primary text-lg">Rs. {payableTotal.toFixed(2)}</span>
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground text-center">
+                Scan &amp; pay using PhonePe or any UPI app, then tap Place Order.
+              </p>
+            </div>
+          </div>
+
           <button
             type="submit"
             disabled={loading}
@@ -395,9 +352,11 @@ export function Checkout() {
           >
             {loading ? 'Placing Order...' : `Place Order — Rs. ${payableTotal.toFixed(2)}`}
           </button>
+          <p className="text-xs text-center text-muted-foreground">
+            By placing the order you confirm that you have completed the UPI payment for the total amount.
+          </p>
         </form>
 
-        {/* Order Summary */}
         <div>
           <div className="bg-white p-6 sm:p-8 rounded-3xl border border-border shadow-sm sticky top-32">
             <h2 className="text-2xl font-bold mb-6">Order Summary</h2>
@@ -433,6 +392,11 @@ export function Checkout() {
                 <span className="font-bold">Total</span>
                 <span className="font-bold text-primary">Rs. {payableTotal.toFixed(2)}</span>
               </div>
+            </div>
+            <div className="mt-6 pt-6 border-t border-border hidden lg:block">
+              <p className="text-xs text-muted-foreground text-center">
+                Payment via UPI QR only — no card gateway
+              </p>
             </div>
           </div>
         </div>

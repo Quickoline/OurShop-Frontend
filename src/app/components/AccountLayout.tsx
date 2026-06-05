@@ -3,13 +3,14 @@ import { useAuth } from '../context/AuthContext';
 import { useShop } from '../context/ShopContext';
 import {
   LayoutDashboard, Package, Clock, Truck, Heart, MapPin,
-  CreditCard, Settings, LogOut, ChevronRight, Menu, X, User
+  CreditCard, Settings, LogOut, ChevronRight, Menu, X, User, Wallet
 } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const menuItems = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/account', end: true },
+  { label: 'My Wallet', icon: Wallet, path: '/account/wallet' },
   { label: 'My Orders', icon: Package, path: '/account/orders' },
   { label: 'Order History', icon: Clock, path: '/account/order-history' },
   { label: 'Track Order', icon: Truck, path: '/account/track-order' },

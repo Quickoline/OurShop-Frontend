@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { shop } from '../config/shop';
+import { HeroVideo } from './HeroVideo';
 
 export function HeroSection() {
   return (
@@ -37,6 +38,10 @@ export function HeroSection() {
                 {shop.isDualCatalog ? 'Products & services' : shop.catalog.title.toLowerCase()}
               </span>
             </h1>
+
+            <div className="mt-6 max-w-xl mx-auto lg:mx-0 rounded-2xl overflow-hidden ring-1 ring-white/20 shadow-2xl aspect-video">
+              <HeroVideo />
+            </div>
 
             <p className="mt-6 text-lg text-slate-300 max-w-lg mx-auto lg:mx-0 leading-relaxed">
               {shop.isDualCatalog

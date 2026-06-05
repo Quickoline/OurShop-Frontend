@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, Heart, MapPin, ShoppingBag, Edit3, Lock, TrendingUp, Clock } from 'lucide-react';
+import { Package, Heart, MapPin, ShoppingBag, Edit3, Lock, TrendingUp, Clock, Wallet } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useShop } from '../../context/ShopContext';
-import { orderApi } from '../../services/api';
+import { orderApi, userApi } from '../../services/api';
 import { extractOrders, formatDateSafe, toId } from '../../utils/mongo';
 
 export function ProfileDashboard() {
-  const { user } = useAuth();
+  const { user, setSession, token } = useAuth();
   const { wishlist, cart } = useShop();
   const [orderCount, setOrderCount] = useState(0);
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
@@ -16,6 +16,18 @@ export function ProfileDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        if (token) {
+          const me = await userApi.getMe();
+          const fresh = me?.data;
+          if (fresh) {
+            setSession(token, {
+              ...fresh,
+              id: fresh.id || fresh._id,
+              _id: fresh._id || fresh.id,
+              walletBalance: fresh.walletBalance ?? 0,
+            });
+          }
+        }
         const res = await orderApi.getMyOrders();
         const parsedOrders = extractOrders(res);
         setOrderCount(parsedOrders.length);
@@ -24,9 +36,16 @@ export function ProfileDashboard() {
       setLoading(false);
     };
     fetchData();
-  }, []);
+  }, [token, setSession]);
 
   const stats = [
+    {
+      label: 'Wallet Balance',
+      value: `₹${Number(user?.walletBalance ?? 0).toFixed(0)}`,
+      icon: Wallet,
+      color: 'from-violet-400 to-violet-500',
+      link: '/account/wallet',
+    },
     { label: 'Total Orders', value: orderCount, icon: Package, color: 'from-orange-400 to-orange-500', link: '/account/orders' },
     { label: 'Wishlist Items', value: wishlist.length, icon: Heart, color: 'from-pink-400 to-pink-500', link: '/account/wishlist' },
     { label: 'Cart Items', value: cart.length, icon: ShoppingBag, color: 'from-blue-400 to-blue-500', link: '/cart' },

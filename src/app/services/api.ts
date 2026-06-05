@@ -1,7 +1,6 @@
 function resolveApiBase(): string {
-  const explicit = ((import.meta as any).env?.VITE_API_URL as string | undefined)?.trim();
+  const explicit = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
   if (explicit) return explicit.replace(/\/$/, "");
-  if ((import.meta as any).env?.DEV) return "";
   return "http://localhost:5000";
 }
 
@@ -45,6 +44,14 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   }
 
   return data;
+}
+
+/** Unwrap `{ success, data }` from backend JSON. */
+export function unwrapApiData<T>(res: unknown): T {
+  if (res && typeof res === "object" && "data" in res) {
+    return (res as { data: T }).data;
+  }
+  return res as T;
 }
 
 // ── Product API ──────────────────────────────────────────
@@ -113,10 +120,20 @@ export const userApi = {
       body: JSON.stringify({ email, password }),
       skipAuth: true,
     }),
-  register: async (name: string, email: string, password: string) => {
+  register: async (
+    name: string,
+    email: string,
+    password: string,
+    referralCode?: string
+  ) => {
     return await request<any>('/api/user', {
       method: 'POST',
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({
+        name,
+        email,
+        password,
+        ...(referralCode?.trim() ? { referralCode: referralCode.trim() } : {}),
+      }),
       skipAuth: true,
     });
   },
@@ -145,6 +162,15 @@ export const userApi = {
     }),
   deleteAddress: (id: string, addressId: string) =>
     request<any>(`/api/user/${id}/addressess/${addressId}`, { method: 'DELETE' }),
+};
+
+// ── Wallet / MLM API ─────────────────────────────────────
+export const walletApi = {
+  getConfig: () => request<any>('/api/wallet/config', { skipAuth: true }),
+  getMyWallet: () => request<any>('/api/wallet/me'),
+  getMyTransactions: (page = 1, limit = 20) =>
+    request<any>(`/api/wallet/me/transactions?page=${page}&limit=${limit}`),
+  getMyTeam: () => request<any>('/api/wallet/me/team'),
 };
 
 // ── Cart API ─────────────────────────────────────────────
@@ -193,6 +219,14 @@ export const orderApi = {
   getById: (id: string) => request<any>(`/api/order/${id}`),
   cancel: (id: string) =>
     request<any>(`/api/order/${id}/cancel`, { method: 'PATCH' }),
+  markPaid: (id: string) =>
+    request<any>(`/api/order/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        isPaid: true,
+        paymentResult: { status: 'success', paidAt: new Date().toISOString() },
+      }),
+    }),
 };
 
 // ── Review API ───────────────────────────────────────────

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, User, Heart, ShoppingCart, Menu, X, LogOut, ChevronDown, Package, MapPin, Settings } from 'lucide-react';
+import { Search, User, Heart, ShoppingCart, Menu, X, LogOut, ChevronDown, Package, MapPin, Settings, Wallet, Gift } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
@@ -65,6 +65,17 @@ export function Navbar() {
   }, [isMobileMenuOpen]);
 
   const bottomLinks = buildNavLinks(categories);
+
+  const walletHref = isAuthenticated
+    ? '/account/wallet'
+    : '/login?redirect=/account/wallet';
+  const referHref = isAuthenticated
+    ? '/account/wallet#refer'
+    : '/login?redirect=/account/wallet';
+  const walletBalanceLabel =
+    isAuthenticated && user?.walletBalance != null
+      ? `₹${Number(user.walletBalance).toFixed(0)}`
+      : null;
 
   const filteredProducts = searchQuery.trim() 
     ? products.filter(p => {
@@ -183,8 +194,41 @@ export function Navbar() {
           </div>
 
           {/* Right Actions */}
-          <div className="flex items-center space-x-2 sm:space-x-5 flex-none">
-            
+          <div className="flex items-center space-x-2 sm:space-x-4 flex-none">
+            <Link
+              to={walletHref}
+              className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-primary/25 bg-primary/5 text-primary hover:bg-primary/10 transition-colors text-[13px] font-semibold"
+              title="My Wallet"
+            >
+              <Wallet size={18} />
+              <span>Wallet</span>
+              {walletBalanceLabel && (
+                <span className="text-[11px] font-bold opacity-90">{walletBalanceLabel}</span>
+              )}
+            </Link>
+            <Link
+              to={referHref}
+              className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-[13px] font-semibold shadow-sm"
+              title="Refer & Earn"
+            >
+              <Gift size={18} />
+              <span>Refer &amp; Earn</span>
+            </Link>
+            <Link
+              to={walletHref}
+              className="md:hidden p-2 rounded-xl text-primary hover:bg-primary/5 transition-colors"
+              aria-label="Wallet"
+            >
+              <Wallet size={22} />
+            </Link>
+            <Link
+              to={referHref}
+              className="md:hidden p-2 rounded-xl text-primary hover:bg-primary/5 transition-colors"
+              aria-label="Refer and earn"
+            >
+              <Gift size={22} />
+            </Link>
+
             {/* ─── When Logged In: Profile Dropdown ─── */}
             {isAuthenticated ? (
               <div 
@@ -261,6 +305,17 @@ export function Navbar() {
                         <Link to="/account#settings" onClick={() => setShowAccountDropdown(false)} className="flex items-center gap-3 px-5 py-2.5 hover:bg-gray-50 transition-colors">
                           <Settings size={17} className="text-gray-400" />
                           <span className="text-[13px] font-medium text-gray-700">Account Settings</span>
+                        </Link>
+                        <Link to="/account/wallet" onClick={() => setShowAccountDropdown(false)} className="flex items-center gap-3 px-5 py-2.5 hover:bg-gray-50 transition-colors">
+                          <Wallet size={17} className="text-gray-400" />
+                          <span className="text-[13px] font-medium text-gray-700">My Wallet</span>
+                          {walletBalanceLabel && (
+                            <span className="ml-auto text-[11px] font-bold text-primary">{walletBalanceLabel}</span>
+                          )}
+                        </Link>
+                        <Link to="/account/wallet#refer" onClick={() => setShowAccountDropdown(false)} className="flex items-center gap-3 px-5 py-2.5 hover:bg-gray-50 transition-colors">
+                          <Gift size={17} className="text-gray-400" />
+                          <span className="text-[13px] font-medium text-gray-700">Refer &amp; Earn</span>
                         </Link>
                       </div>
 
@@ -353,6 +408,22 @@ export function Navbar() {
                             ?
                           </div>
                           <span className="text-[14px] font-medium text-gray-700">Contact Us</span>
+                        </Link>
+                        <Link
+                          to="/login?redirect=/account/wallet"
+                          onClick={() => setShowLoginDropdown(false)}
+                          className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors border-t border-gray-50"
+                        >
+                          <Wallet size={18} className="text-primary" />
+                          <span className="text-[14px] font-medium text-gray-700">Wallet</span>
+                        </Link>
+                        <Link
+                          to="/login?redirect=/account/wallet"
+                          onClick={() => setShowLoginDropdown(false)}
+                          className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors"
+                        >
+                          <Gift size={18} className="text-primary" />
+                          <span className="text-[14px] font-medium text-gray-700">Refer &amp; Earn</span>
                         </Link>
                       </div>
 
@@ -524,6 +595,28 @@ export function Navbar() {
                     </div>
                   </Link>
                 )}
+              </div>
+
+              <div className="px-4 py-3 flex gap-2 border-b border-gray-100">
+                <Link
+                  to={walletHref}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-primary/25 bg-primary/5 text-primary text-sm font-semibold"
+                >
+                  <Wallet size={18} />
+                  Wallet
+                  {walletBalanceLabel && (
+                    <span className="text-[11px] opacity-90">({walletBalanceLabel})</span>
+                  )}
+                </Link>
+                <Link
+                  to={referHref}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold"
+                >
+                  <Gift size={18} />
+                  Refer &amp; Earn
+                </Link>
               </div>
 
               {/* Mobile Account Links (only when logged in) */}

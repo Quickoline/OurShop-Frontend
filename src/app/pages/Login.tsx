@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -15,11 +15,19 @@ export function Login() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const redirectTo = searchParams.get('redirect') || '/';
+  const refFromUrl = searchParams.get('ref') || '';
   const isSignUp = useMemo(() => {
     const mode = new URLSearchParams(location.search).get('mode');
     return deriveSignUp(location.pathname, mode);
   }, [location.pathname, location.search]);
   const [name, setName] = useState('');
+  const [referralCode, setReferralCode] = useState(refFromUrl);
+
+  useEffect(() => {
+    if (refFromUrl) {
+      setReferralCode(refFromUrl.trim().toUpperCase());
+    }
+  }, [refFromUrl]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isAdultConfirmed, setIsAdultConfirmed] = useState(false);
@@ -90,7 +98,7 @@ export function Login() {
 
     try {
       if (isSignUp) {
-        await signup(name, email, password);
+        await signup(name, email, password, referralCode);
       } else {
         await login(email, password);
       }
@@ -175,6 +183,21 @@ export function Login() {
               </button>
             </div>
           </div>
+
+          {isSignUp && (
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Referral code (optional)
+              </label>
+              <input
+                type="text"
+                placeholder="Enter sponsor referral code"
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                className="input-modern"
+              />
+            </div>
+          )}
 
           {isSignUp && (
             <label className="flex items-start gap-2 text-sm text-foreground">

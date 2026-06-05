@@ -35,10 +35,13 @@ import { AccountWishlist } from './pages/account/AccountWishlist';
 import { SavedAddresses } from './pages/account/SavedAddresses';
 import { PaymentMethods } from './pages/account/PaymentMethods';
 import { ProfileSettings } from './pages/account/ProfileSettings';
+import { MyWallet } from './pages/account/MyWallet';
 
 import { ShopProvider } from './context/ShopContext';
 import { AuthProvider } from './context/AuthContext';
 import { ScrollToTop } from './components/ScrollToTop';
+
+const CHECKOUT_QR_URL = '/qr%20shop.jpeg';
 
 function OrderSuccessPage() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -47,12 +50,20 @@ function OrderSuccessPage() {
     <main className="container mx-auto px-4 py-32 min-h-screen">
       <div className="max-w-2xl mx-auto text-center bg-white rounded-3xl border border-border shadow-sm p-8 sm:p-10">
         <div className="text-emerald-600 font-bold text-sm tracking-wide uppercase mb-3">
-          Payment Successful
+          Order placed
         </div>
-        <h1 className="text-4xl font-extrabold text-foreground mb-3">Your order is confirmed</h1>
-        <p className="text-muted-foreground text-lg mb-8">
+        <h1 className="text-4xl font-extrabold text-foreground mb-3">Thank you for your order</h1>
+        <p className="text-muted-foreground text-lg mb-4">
           Order ID: <span className="font-semibold text-foreground">{orderId}</span>
         </p>
+        <p className="text-sm text-muted-foreground mb-6">
+          If you have not paid yet, scan the UPI QR below. We will confirm your order after payment verification.
+        </p>
+        <img
+          src={CHECKOUT_QR_URL}
+          alt="PhonePe QR code"
+          className="mx-auto w-full max-w-[220px] rounded-xl border border-border shadow-sm mb-8"
+        />
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
@@ -120,6 +131,7 @@ export default function App() {
               }
             >
               <Route index element={<ProfileDashboard />} />
+              <Route path="wallet" element={<MyWallet />} />
               <Route path="orders" element={<AccountMyOrders />} />
               <Route path="orders/:orderId" element={<OrderDetails />} />
               <Route path="order-history" element={<OrderHistory />} />
