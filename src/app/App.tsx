@@ -17,6 +17,8 @@ import { Cart } from './pages/Cart';
 import { Wishlist } from './pages/Wishlist';
 import { Checkout } from './pages/Checkout';
 import { Login } from './pages/Login';
+import { ForgotPassword } from './pages/ForgotPassword';
+import { ResetPassword } from './pages/ResetPassword';
 import { MyOrders } from './pages/MyOrders';
 import { ContactUs } from './pages/ContactUs';
 import { Collection } from './pages/Collection';
@@ -112,6 +114,8 @@ export default function App() {
             <Route path="/order-success/:orderId" element={<OrderSuccessPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route path="/orders" element={<MyOrders />} />
             <Route path="/contact" element={<ContactUs />} />
             <Route path="/collection/:slug" element={<Collection />} />

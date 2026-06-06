@@ -120,6 +120,18 @@ export const userApi = {
       body: JSON.stringify({ email, password }),
       skipAuth: true,
     }),
+  forgotPassword: (email: string) =>
+    request<any>('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+      skipAuth: true,
+    }),
+  resetPassword: (token: string, newPassword: string) =>
+    request<any>(`/auth/reset-password/${encodeURIComponent(token)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ newPassword }),
+      skipAuth: true,
+    }),
   register: async (
     name: string,
     email: string,

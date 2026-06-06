@@ -20,7 +20,7 @@ export function HeroSection() {
       </div>
 
       <div className="relative container mx-auto px-4 sm:px-6 py-16 sm:py-20 lg:py-28">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center max-w-6xl mx-auto">
+        <div className="grid lg:grid-cols-1 gap-12 lg:gap-16 items-center max-w-3xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
@@ -77,47 +77,6 @@ export function HeroSection() {
                   </Link>
                 </>
               )}
-            </div>
-
-            <div className="mt-12 flex flex-wrap gap-8 justify-center lg:justify-start text-center lg:text-left">
-              {[
-                { value: '10k+', label: 'Happy customers' },
-                {
-                  value: '500+',
-                  label: shop.isDualCatalog ? 'Products & services' : shop.catalog.title,
-                },
-                { value: '24/7', label: 'Support' },
-              ].map((stat) => (
-                <div key={stat.label}>
-                  <p className="text-2xl font-bold text-white font-[family-name:var(--font-display)]">
-                    {stat.value}
-                  </p>
-                  <p className="text-sm text-slate-400">{stat.label}</p>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7, delay: 0.15 }}
-            className="relative hidden lg:block"
-          >
-            <div className="relative aspect-[4/5] max-w-md mx-auto rounded-3xl overflow-hidden ring-1 ring-white/20 shadow-2xl">
-              <img
-                src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80"
-                alt={shop.name}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-transparent to-transparent" />
-              <div className="absolute bottom-6 left-6 right-6 card-surface p-4 !bg-card/95 backdrop-blur">
-                <p className="text-xs font-bold text-primary uppercase tracking-wider">Featured</p>
-                <p className="font-semibold text-foreground mt-1">Shop the latest collection</p>
-              </div>
-            </div>
-            <div className="absolute -top-4 -right-4 badge-pill bg-primary text-primary-foreground shadow-lg">
-              New arrivals
             </div>
           </motion.div>
         </div>

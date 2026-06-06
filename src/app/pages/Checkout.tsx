@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
@@ -60,6 +60,26 @@ export function Checkout() {
   }, 0);
   const payableTotal = total;
 
+  const isAddressComplete = useMemo(() => {
+    const name = formData.name.trim();
+    const email = formData.email.trim();
+    const phone = formData.phone.trim();
+    const street = formData.street.trim();
+    const city = formData.city.trim();
+    const state = formData.state.trim();
+    const pincode = formData.pincode.trim();
+
+    return (
+      name.length >= 2 &&
+      email.includes('@') &&
+      phone.replace(/\D/g, '').length >= 10 &&
+      street.length >= 5 &&
+      city.length >= 2 &&
+      state.length >= 2 &&
+      /^\d{6}$/.test(pincode)
+    );
+  }, [formData]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -81,6 +101,10 @@ export function Checkout() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAddressComplete) {
+      toast.error('Please fill in all shipping details before placing your order.');
+      return;
+    }
     setLoading(true);
 
     try {
@@ -347,11 +371,16 @@ export function Checkout() {
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-primary text-primary-foreground py-4 rounded-xl font-bold text-lg hover:bg-primary/90 transition-all shadow-lg shadow-primary/30 active:scale-[0.98] disabled:opacity-60"
+            disabled={loading || !isAddressComplete}
+            className="w-full bg-primary text-primary-foreground py-4 rounded-xl font-bold text-lg hover:bg-primary/90 transition-all shadow-lg shadow-primary/30 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {loading ? 'Placing Order...' : `Place Order — Rs. ${payableTotal.toFixed(2)}`}
           </button>
+          {!isAddressComplete && (
+            <p className="text-xs text-center text-amber-700">
+              Complete all shipping fields (including a valid 6-digit PIN code) to place your order.
+            </p>
+          )}
           <p className="text-xs text-center text-muted-foreground">
             By placing the order you confirm that you have completed the UPI payment for the total amount.
           </p>

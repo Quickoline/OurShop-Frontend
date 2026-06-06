@@ -160,7 +160,7 @@ export function Login() {
             <div className="flex justify-between items-center mb-2">
               <label className="block text-sm font-medium text-foreground">Password</label>
               {!isSignUp && (
-                <a href="#" className="text-sm text-primary hover:underline">Forgot password?</a>
+                <Link to="/forgot-password" className="text-sm text-primary hover:underline">Forgot password?</Link>
               )}
             </div>
             <div className="relative">
