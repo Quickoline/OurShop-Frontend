@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useShop } from '../context/ShopContext';
 import { SectionHeader } from './SectionHeader';
 import { shop, categoryPath } from '../config/shop';
+import { CategoryIcon, getCategoryVisual } from '../utils/categoryIcon';
 
 export function CategorySection() {
   const navigate = useNavigate();
@@ -22,32 +23,37 @@ export function CategorySection() {
         />
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
-          {categories.map((category, index) => (
-            <motion.button
-              key={category._id || category.id}
-              type="button"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.05 }}
-              onClick={() => navigate(categoryPath(category))}
-              className="group text-left card-surface-hover overflow-hidden p-0"
-            >
-              <div className="aspect-square overflow-hidden bg-secondary">
-                <img
-                  src={category.image}
-                  alt={category.name}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  loading="lazy"
-                />
-              </div>
-              <div className="p-4">
-                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                  {category.name}
-                </h3>
-              </div>
-            </motion.button>
-          ))}
+          {categories.map((category, index) => {
+            const { gradient } = getCategoryVisual(category);
+            return (
+              <motion.button
+                key={category._id || category.id}
+                type="button"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.05 }}
+                onClick={() => navigate(categoryPath(category))}
+                className="group text-left card-surface-hover overflow-hidden p-0"
+              >
+                <div
+                  className={`aspect-square flex items-center justify-center bg-gradient-to-br ${gradient}`}
+                >
+                  <CategoryIcon
+                    category={category}
+                    size="lg"
+                    rounded="2xl"
+                    className="!h-auto !w-auto !bg-transparent shadow-none"
+                  />
+                </div>
+                <div className="p-4">
+                  <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                    {category.name}
+                  </h3>
+                </div>
+              </motion.button>
+            );
+          })}
         </div>
       </div>
     </section>

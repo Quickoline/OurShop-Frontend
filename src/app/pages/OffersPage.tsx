@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { ProductCard } from '../components/ProductCard';
 import { Product, normalizeProduct } from '../data/products';
@@ -42,13 +42,18 @@ function isOfferKey(v: string | undefined): v is OfferKey {
   return !!v && Object.prototype.hasOwnProperty.call(OFFER_CONFIG, v);
 }
 
+import { useScrollRestoration } from '../utils/scroll';
+
 export function OffersPage() {
+  const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
   const { products: contextProducts } = useShop();
 
   const config = useMemo(() => (isOfferKey(slug) ? OFFER_CONFIG[slug] : null), [slug]);
   const [displayProducts, setDisplayProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useScrollRestoration(loading);
 
   useEffect(() => {
     const run = async () => {
@@ -120,7 +125,18 @@ export function OffersPage() {
   return (
     <main className="container mx-auto px-4 pt-36 pb-12 min-h-screen">
       <div className="mb-8">
-        <Link to="/shop" className="text-muted-foreground hover:text-primary transition-colors">
+        <Link 
+          to="/shop" 
+          onClick={(e) => {
+            e.preventDefault();
+            if (window.history.state && window.history.state.idx > 0) {
+              navigate(-1);
+            } else {
+              navigate('/shop');
+            }
+          }}
+          className="text-muted-foreground hover:text-primary transition-colors"
+        >
           ← Back to Shop
         </Link>
       </div>

@@ -17,6 +17,9 @@ interface OrderItem {
   price: number;
   color?: string;
   size?: string;
+  itemType?: string;
+  service?: any;
+  serviceId?: string;
 }
 
 interface Order {
@@ -212,20 +215,29 @@ export function AccountMyOrders() {
               <div key={orderId} className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all ${isExpanded ? `${statusConfig.border} shadow-md` : 'border-border hover:shadow-md'}`}>
                 {/* Header Bar */}
                 <div className="bg-gray-50 px-5 py-3 flex flex-wrap items-center justify-between gap-2 text-sm border-b border-gray-100">
-                  <div className="flex flex-wrap gap-4 sm:gap-6">
-                    <div>
-                      <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Order Placed</p>
-                      <p className="text-gray-700 font-medium text-xs">{formatDateSafe(order.createdAt, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Total</p>
-                      <p className="text-gray-800 font-bold text-xs">₹{(order.totalPrice || 0).toFixed(0)}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Items</p>
-                      <p className="text-gray-700 font-medium text-xs">{items.length}</p>
-                    </div>
-                  </div>
+                  {(() => {
+                    const onlyServices = items.length > 0 && items.every((item: any) => item.itemType === 'service' || item.service || item.serviceId);
+                    return (
+                      <div className="flex flex-wrap gap-4 sm:gap-6">
+                        <div>
+                          <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Order Placed</p>
+                          <p className="text-gray-700 font-medium text-xs">{formatDateSafe(order.createdAt, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Total</p>
+                          {onlyServices ? (
+                            <p className="text-primary font-bold text-xs">Contact for pricing</p>
+                          ) : (
+                            <p className="text-gray-800 font-bold text-xs">₹{(order.totalPrice || 0).toFixed(2)}</p>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Items</p>
+                          <p className="text-gray-700 font-medium text-xs">{items.length}</p>
+                        </div>
+                      </div>
+                    );
+                  })()}
                   <div className="text-right">
                     <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Order #</p>
                     <p className="text-gray-500 font-mono text-xs">{orderId.slice(-10).toUpperCase()}</p>
@@ -283,7 +295,13 @@ export function AccountMyOrders() {
                                 <p className="font-bold text-gray-800 text-sm line-clamp-1">{item.title || item.name || `Item #${idx + 1}`}</p>
                                 <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
                               </div>
-                              <p className="font-bold text-sm text-gray-800">Rs. {(item.price * item.quantity).toFixed(0)}</p>
+                              <p className="font-bold text-sm text-gray-800">
+                                {item.itemType === 'service' || item.service || item.serviceId ? (
+                                  <span className="text-primary">Contact for pricing</span>
+                                ) : (
+                                  `Rs. ${(item.price * item.quantity).toFixed(2)}`
+                                )}
+                              </p>
                             </div>
                           ))}
                         </div>

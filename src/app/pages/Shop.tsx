@@ -1,14 +1,17 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'motion/react';
+import { ArrowRight } from 'lucide-react';
 import { ProductCard } from '../components/ProductCard';
 import { CatalogTypeTabs } from '../components/CatalogTypeTabs';
 import { useShop } from '../context/ShopContext';
 import { normalizeProduct, Product } from '../data/products';
-import { filterByCatalogType } from '../data/catalogHelpers';
+import { filterByCatalogType, groupProductsByCategory } from '../data/catalogHelpers';
 import { productApi, serviceApi } from '../services/api';
 import { shop, catalogCount } from '../config/shop';
 import type { CatalogItemType } from '../config/shop';
+
+import { useScrollRestoration } from '../utils/scroll';
 
 function parseTypeParam(raw: string | null): CatalogItemType | 'all' {
   if (raw === 'product' || raw === 'service') return raw;
@@ -19,13 +22,20 @@ export function Shop() {
   const [searchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
   const typeFilter = parseTypeParam(searchParams.get('type'));
-  const { products: contextProducts } = useShop();
+  const { products: contextProducts, categories } = useShop();
   const [displayProducts, setDisplayProducts] = useState<Product[]>(contextProducts);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useScrollRestoration(loading);
 
   const filteredByType = useMemo(
     () => filterByCatalogType(displayProducts, typeFilter),
     [displayProducts, typeFilter]
+  );
+
+  const groupedByCategory = useMemo(
+    () => groupProductsByCategory(filteredByType, categories),
+    [filteredByType, categories]
   );
 
   useEffect(() => {
@@ -83,7 +93,12 @@ export function Shop() {
               : []),
           ];
           if (merged.length > 0) {
-            setDisplayProducts(merged);
+            const sorted = merged.sort((a: Product, b: Product) => {
+              const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+              const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+              return da - db;
+            });
+            setDisplayProducts(sorted);
             setLoading(false);
             return;
           }
@@ -94,7 +109,7 @@ export function Shop() {
 
       if (query) {
         setDisplayProducts(
-          contextProducts.filter((p) => {
+          contextProducts.filter((p: Product) => {
             const np = normalizeProduct(p);
             const catName = typeof p.category === 'string' ? p.category : p.category?.name || '';
             return (
@@ -110,7 +125,7 @@ export function Shop() {
     };
 
     fetchProducts();
-  }, [query, contextProducts]);
+  }, [query, typeFilter, contextProducts]);
 
   const pageTitle = useMemo(() => {
     if (query) return `Results for "${query}"`;
@@ -142,16 +157,41 @@ export function Shop() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6">
-          {filteredByType.map((product, index) => (
-            <motion.div
-              key={product._id || product.id}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-            >
-              <ProductCard product={product} />
-            </motion.div>
+        <div className="space-y-12 sm:space-y-14">
+          {groupedByCategory.map((group, groupIndex) => (
+            <section key={group.key} aria-labelledby={`shop-cat-${group.key}`}>
+              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-5 sm:mb-6">
+                <div>
+                  <p className="section-label">Category</p>
+                  <h2 id={`shop-cat-${group.key}`} className="text-xl sm:text-2xl font-bold text-foreground">
+                    {group.name}
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {catalogCount(group.items.length, typeFilter === 'all' ? undefined : typeFilter)}
+                  </p>
+                </div>
+                <Link
+                  to={`/category/${group.slug}`}
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:gap-3 transition-all shrink-0"
+                >
+                  View category
+                  <ArrowRight size={16} />
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+                {group.items.map((product: Product, index: number) => (
+                  <motion.div
+                    key={product._id || product.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: Math.min(groupIndex * 0.05 + index * 0.03, 0.35) }}
+                  >
+                    <ProductCard product={product} size="medium" />
+                  </motion.div>
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       )}

@@ -129,12 +129,21 @@ export function OrderHistory() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${getStatusColor(status)}`}>
-                      {status.replace(/_/g, ' ')}
-                    </span>
-                    <span className="font-bold text-sm text-foreground">₹{(order.totalPrice || 0).toFixed(0)}</span>
-                  </div>
+                  {(() => {
+                    const onlyServices = items.length > 0 && items.every((item: any) => item.itemType === 'service' || item.service || item.serviceId);
+                    return (
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${getStatusColor(status)}`}>
+                          {status.replace(/_/g, ' ')}
+                        </span>
+                        {onlyServices ? (
+                          <span className="font-semibold text-xs text-primary">Contact for pricing</span>
+                        ) : (
+                          <span className="font-bold text-sm text-foreground">₹{(order.totalPrice || 0).toFixed(0)}</span>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </Link>
               );
             })}

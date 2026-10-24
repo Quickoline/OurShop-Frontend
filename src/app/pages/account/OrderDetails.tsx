@@ -45,6 +45,7 @@ export function OrderDetails() {
   const status = (order.orderStatus || order.status || 'PLACED').toUpperCase();
   const address = order.shippingAddress;
   const orderIdValue = toId(order?._id || order?.id);
+  const onlyServices = items.length > 0 && items.every((item: any) => item.itemType === 'service' || item.service || item.serviceId);
 
   return (
     <div>
@@ -87,70 +88,89 @@ export function OrderDetails() {
               <Package size={18} className="text-primary" /> Items ({items.length})
             </h2>
             <div className="space-y-3">
-              {items.map((item: any, idx: number) => (
-                <div key={idx} className="flex items-center gap-4 bg-gray-50 rounded-xl p-4">
-                  <div className="w-16 h-16 bg-gray-200 rounded-xl overflow-hidden flex-shrink-0">
-                    {(item.image || item.product?.imgCover || item.service?.imgCover) ? (
-                      <img
-                        src={item.image || item.product?.imgCover || item.service?.imgCover}
-                        alt={item.title || item.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400"><Package size={24} /></div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-800 text-sm">{item.title || item.name || `Item #${idx + 1}`}</p>
-                    {(item.itemType === 'service' || item.service) && (
-                      <span className="inline-block mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                        Service
-                      </span>
-                    )}
-                    <div className="flex gap-3 mt-1 text-xs text-muted-foreground">
-                      <span>Qty: <strong className="text-gray-700">{item.quantity}</strong></span>
-                      {item.color && <span>Color: <strong className="text-gray-700">{item.color}</strong></span>}
-                      {item.size && <span>Size: <strong className="text-gray-700">{item.size}</strong></span>}
+              {items.map((item: any, idx: number) => {
+                const isSvc = item.itemType === 'service' || item.service;
+                return (
+                  <div key={idx} className="flex items-center gap-4 bg-gray-50 rounded-xl p-4">
+                    <div className="w-16 h-16 bg-gray-200 rounded-xl overflow-hidden flex-shrink-0">
+                      {(item.image || item.product?.imgCover || item.service?.imgCover) ? (
+                        <img
+                          src={item.image || item.product?.imgCover || item.service?.imgCover}
+                          alt={item.title || item.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400"><Package size={24} /></div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-gray-800 text-sm">{item.title || item.name || `Item #${idx + 1}`}</p>
+                      {isSvc && (
+                        <span className="inline-block mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                          Service
+                        </span>
+                      )}
+                      <div className="flex gap-3 mt-1 text-xs text-muted-foreground">
+                        <span>Qty: <strong className="text-gray-700">{item.quantity}</strong></span>
+                        {item.color && <span>Color: <strong className="text-gray-700">{item.color}</strong></span>}
+                        {item.size && <span>Size: <strong className="text-gray-700">{item.size}</strong></span>}
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      {isSvc ? (
+                        <span className="text-xs font-semibold text-primary">Contact for pricing</span>
+                      ) : (
+                        <>
+                          <p className="font-bold text-gray-800">₹{(item.price * item.quantity).toFixed(2)}</p>
+                          {item.quantity > 1 && <p className="text-xs text-muted-foreground">₹{item.price.toFixed(2)} each</p>}
+                        </>
+                      )}
                     </div>
                   </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className="font-bold text-gray-800">₹{(item.price * item.quantity).toFixed(0)}</p>
-                    {item.quantity > 1 && <p className="text-xs text-muted-foreground">₹{item.price.toFixed(0)} each</p>}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
-
+ 
           {/* Price Breakdown */}
           <div className="bg-white rounded-2xl border border-border shadow-sm p-5">
             <h2 className="font-bold text-foreground mb-4">Price Breakdown</h2>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Items Total</span>
-                <span className="font-medium">Rs. {(order.itemsPrice || order.totalPrice || 0).toFixed(0)}</span>
+                {onlyServices ? (
+                  <span className="font-medium text-primary">Contact for pricing</span>
+                ) : (
+                  <span className="font-medium">Rs. {(order.itemsPrice || order.totalPrice || 0).toFixed(2)}</span>
+                )}
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Shipping</span>
-                <span className={order.shippingPrice > 0 ? 'font-medium' : 'text-emerald-600 font-medium'}>
-                  {order.shippingPrice > 0 ? `Rs. ${order.shippingPrice.toFixed(0)}` : 'Free'}
-                </span>
-              </div>
-              {order.taxPrice > 0 && (
+              {!onlyServices && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tax</span>
-                  <span className="font-medium">Rs. {order.taxPrice.toFixed(0)}</span>
+                  <span className="text-muted-foreground">Shipping</span>
+                  <span className={order.shippingPrice > 0 ? 'font-medium' : 'text-emerald-600 font-medium'}>
+                    {order.shippingPrice > 0 ? `Rs. ${order.shippingPrice.toFixed(2)}` : 'Free'}
+                  </span>
                 </div>
               )}
-              {order.discountPrice > 0 && (
+              {!onlyServices && order.taxPrice > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Tax</span>
+                  <span className="font-medium">Rs. {order.taxPrice.toFixed(2)}</span>
+                </div>
+              )}
+              {!onlyServices && order.discountPrice > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Discount</span>
-                  <span className="text-emerald-600 font-medium">-Rs. {order.discountPrice.toFixed(0)}</span>
+                  <span className="text-emerald-600 font-medium">-Rs. {order.discountPrice.toFixed(2)}</span>
                 </div>
               )}
               <div className="border-t border-gray-200 pt-2 mt-2 flex justify-between">
                 <span className="font-bold text-foreground">Total</span>
-                <span className="font-bold text-primary text-lg">Rs. {(order.totalPrice || 0).toFixed(0)}</span>
+                {onlyServices ? (
+                  <span className="font-bold text-primary text-lg">Contact for pricing</span>
+                ) : (
+                  <span className="font-bold text-primary text-lg">Rs. {(order.totalPrice || 0).toFixed(2)}</span>
+                )}
               </div>
             </div>
           </div>

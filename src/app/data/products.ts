@@ -56,6 +56,7 @@ export interface Product {
   badge?: string;
   catalogType?: 'product' | 'service';
   isActive?: boolean;
+  cartQuantity?: number | '';
   createdAt?: string;
   updatedAt?: string;
 }
@@ -72,6 +73,8 @@ export interface Category {
   displayOrder?: number;
   showInNav?: boolean;
   isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Testimonial {
@@ -99,9 +102,17 @@ export function normalizeProduct(p: any): Product & {
   displayReviews: number;
   displayId: string;
 } {
-  const basePrice = Number(p?.price || 0);
-  const rawPriceAfterDiscount = Number(p?.priceAfterDiscount);
-  const rawDiscountPercentage = Number(p?.discountPercentage ?? p?.discount);
+  const options = Array.isArray(p?.sizeOptions) ? p.sizeOptions : [];
+  const defaultOpt = options.find((o: any) => o.isDefault) || options[0];
+
+  let basePrice = Number(p?.price || 0);
+  let rawPriceAfterDiscount = Number(p?.priceAfterDiscount);
+  let rawDiscountPercentage = Number(p?.discountPercentage ?? p?.discount);
+
+  if (defaultOpt) {
+    basePrice = defaultOpt.mrp != null ? Number(defaultOpt.mrp) : (defaultOpt.price != null ? Number(defaultOpt.price) : basePrice);
+    rawPriceAfterDiscount = defaultOpt.price != null ? Number(defaultOpt.price) : rawPriceAfterDiscount;
+  }
 
   const hasPad = Number.isFinite(rawPriceAfterDiscount) && rawPriceAfterDiscount > 0;
   const hasPct = Number.isFinite(rawDiscountPercentage) && rawDiscountPercentage > 0;
@@ -116,9 +127,12 @@ export function normalizeProduct(p: any): Product & {
     displayPrice = Number((basePrice - (basePrice * displayDiscount) / 100).toFixed(2));
   }
 
+  const displayId = resolveId(p._id || p.id);
+
   return {
     ...p,
-    displayId: resolveId(p._id || p.id),
+    slug: displayId, // Overwrite slug to be the unique ID to prevent slug collisions (especially for non-ASCII/Hindi titles)
+    displayId,
     displayName: p.title || p.name || 'Untitled',
     displayImage: p.imgCover || p.image || '',
     displayPrice,

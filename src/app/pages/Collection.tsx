@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { ProductCard } from '../components/ProductCard';
 import { normalizeProduct, Product } from '../data/products';
@@ -18,13 +18,18 @@ const COLLECTIONS: Record<string, { title: string; query: string }> = {
   'gift-ideas': { title: 'Gift Ideas', query: 'gift combo' },
 };
 
+import { useScrollRestoration } from '../utils/scroll';
+
 export function Collection() {
+  const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
   const collection = useMemo(() => (slug ? COLLECTIONS[slug] : undefined), [slug]);
   const { products: contextProducts } = useShop();
 
   const [displayProducts, setDisplayProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useScrollRestoration(loading);
 
   useEffect(() => {
     const run = async () => {
@@ -97,7 +102,18 @@ export function Collection() {
   return (
     <main className="container mx-auto px-4 pt-36 pb-12 min-h-screen">
       <div className="mb-8">
-        <Link to="/shop" className="text-muted-foreground hover:text-primary transition-colors">
+        <Link 
+          to="/shop" 
+          onClick={(e) => {
+            e.preventDefault();
+            if (window.history.state && window.history.state.idx > 0) {
+              navigate(-1);
+            } else {
+              navigate('/shop');
+            }
+          }}
+          className="text-muted-foreground hover:text-primary transition-colors"
+        >
           ← Back to Shop
         </Link>
       </div>
@@ -117,15 +133,15 @@ export function Collection() {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
           {displayProducts.map((product, index) => (
             <motion.div
               key={product._id || product.id}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
+              transition={{ delay: Math.min(index * 0.03, 0.3) }}
             >
-              <ProductCard product={product} />
+              <ProductCard product={product} size="medium" />
             </motion.div>
           ))}
         </div>

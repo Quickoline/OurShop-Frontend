@@ -9,7 +9,8 @@ interface ShopContextType {
   cart: Product[];
   wishlist: Product[];
   loading: boolean;
-  addToCart: (product: Product) => void;
+  addToCart: (product: Product, quantity?: number) => void;
+  updateCartQty: (productId: string, quantity: number | '') => void;
   removeFromCart: (productId: string) => void;
   toggleWishlist: (product: Product) => void;
   isInCart: (productId: string) => boolean;
@@ -37,11 +38,11 @@ function mapCartLineItem(item: any): Product | null {
   if (item.itemType === 'service' || item.serviceId) {
     const service = item.serviceId;
     if (!service || typeof service !== 'object') return null;
-    return { ...service, catalogType: 'service' as const };
+    return { ...service, catalogType: 'service' as const, cartQuantity: item.quantity };
   }
   const product = item.productId;
   if (!product || typeof product !== 'object') return null;
-  return { ...product, catalogType: 'product' as const };
+  return { ...product, catalogType: 'product' as const, cartQuantity: item.quantity };
 }
 
 function tagCatalogItems(
@@ -82,7 +83,12 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
         merged = [...merged, ...tagCatalogItems(serviceRes.data, 'service')];
       }
 
-      setProducts(merged);
+      const sorted = merged.sort((a: Product, b: Product) => {
+        const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return da - db;
+      });
+      setProducts(sorted);
     } catch {
       setProducts([]);
     }
@@ -92,7 +98,12 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
     try {
       const res = await categoryApi.getActive();
       if (res.success && Array.isArray(res.data)) {
-        setCategories(res.data);
+        const sorted = res.data.sort((a: Category, b: Category) => {
+          const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return da - db;
+        });
+        setCategories(sorted);
       }
     } catch {
       setCategories([]);
@@ -140,17 +151,24 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
     loadData();
   }, [refreshProducts, refreshCategories]);
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: Product, quantity = 1) => {
     const pid = getProductId(product);
     const itemType = getCatalogType(product);
     setCart((prev) => {
-      if (prev.some((p) => getProductId(p) === pid)) return prev;
-      return [...prev, product];
+      const exists = prev.find((p) => getProductId(p) === pid);
+      if (exists) {
+        return prev.map((p) =>
+          getProductId(p) === pid
+            ? { ...p, cartQuantity: (p.cartQuantity || 1) + quantity }
+            : p
+        );
+      }
+      return [...prev, { ...product, cartQuantity: quantity }];
     });
 
     if (isAuthenticated()) {
       cartApi
-        .add(pid, 1, itemType)
+        .add(pid, quantity, itemType)
         .then((res) => {
           const items = res?.data?.cartItems || [];
           const cartProducts = items.map(mapCartLineItem).filter(Boolean) as Product[];
@@ -159,6 +177,33 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
         .catch((error) => {
           console.error(error);
         });
+    }
+  };
+
+  const updateCartQty = (productId: string, quantity: number | '') => {
+    const normalizedId = resolveId(productId);
+    setCart((prev) =>
+      prev.map((p) =>
+        getProductId(p) === normalizedId ? { ...p, cartQuantity: quantity } : p
+      )
+    );
+
+    if (isAuthenticated()) {
+      if (quantity !== '' && quantity > 0) {
+        // Find the item in state to get itemType
+        const item = cart.find((p) => getProductId(p) === normalizedId);
+        const itemType = item ? getCatalogType(item) : 'product';
+        cartApi
+          .update(normalizedId, quantity, itemType)
+          .then((res) => {
+            const items = res?.data?.cartItems || [];
+            const cartProducts = items.map(mapCartLineItem).filter(Boolean) as Product[];
+            setCart(cartProducts);
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+      }
     }
   };
 
@@ -221,6 +266,7 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
         wishlist,
         loading,
         addToCart,
+        updateCartQty,
         removeFromCart,
         toggleWishlist,
         isInCart,

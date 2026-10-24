@@ -3,13 +3,13 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
 import { normalizeProduct, Product } from '../data/products';
-import { getCatalogType } from '../data/catalogHelpers';
+import { getCatalogType, isService } from '../data/catalogHelpers';
 import { orderApi, userApi } from '../services/api';
 import { consumeBuyNowProduct } from '../utils/checkoutAuth';
 import { toast } from 'sonner';
 import { QrCode } from 'lucide-react';
 
-const QR_IMAGE_URL = '/qr%20shop.jpeg';
+const QR_IMAGE_URL = '/qr-shop.png';
 
 export function Checkout() {
   const navigate = useNavigate();
@@ -56,9 +56,20 @@ export function Checkout() {
 
   const total = checkoutItems.reduce((sum, item) => {
     const np = normalizeProduct(item);
-    return sum + np.displayPrice;
+    const qty = item.cartQuantity === '' ? 0 : Number(item.cartQuantity ?? 1);
+    const itemPrice = isService(item) ? 0 : np.displayPrice;
+    return sum + itemPrice * qty;
   }, 0);
-  const payableTotal = total;
+
+  const deliveryChargesTotal = checkoutItems.reduce((sum, item) => {
+    const np = normalizeProduct(item);
+    const qty = item.cartQuantity === '' ? 0 : Number(item.cartQuantity ?? 1);
+    const charges = isService(item) ? 0 : Number((np as any).deliveryCharges || 0);
+    return sum + charges * qty;
+  }, 0);
+
+  const payableTotal = total + deliveryChargesTotal;
+  const onlyServices = checkoutItems.length > 0 && checkoutItems.every(isService);
 
   const isAddressComplete = useMemo(() => {
     const name = formData.name.trim();
@@ -118,12 +129,13 @@ export function Checkout() {
           );
         }
         const itemType = getCatalogType(item);
+        const qty = item.cartQuantity === '' ? 0 : Number(item.cartQuantity ?? 1);
         const line: Record<string, unknown> = {
           itemType,
           title: np.displayName,
           image: np.displayImage || undefined,
-          quantity: 1,
-          price: np.displayPrice,
+          quantity: qty,
+          price: itemType === 'service' ? 0 : np.displayPrice,
         };
         if (itemType === 'service') {
           line.service = refId;
@@ -146,7 +158,7 @@ export function Checkout() {
         },
         itemsPrice: total,
         taxPrice: 0,
-        shippingPrice: 0,
+        shippingPrice: deliveryChargesTotal,
         discountPrice: 0,
         totalPrice: payableTotal,
         paymentMethod: 'UPI',
@@ -345,45 +357,49 @@ export function Checkout() {
             </div>
           </div>
 
-          <div className="bg-white p-6 sm:p-8 rounded-3xl border-2 border-primary/20 shadow-sm">
-            <div className="flex items-center gap-2 mb-4">
-              <QrCode className="text-primary" size={22} />
-              <h2 className="text-xl font-bold text-foreground">Pay with UPI (PhonePe)</h2>
-            </div>
-            <p className="text-sm text-muted-foreground mb-4">
-              Scan the QR code and pay <strong className="text-foreground">Rs. {payableTotal.toFixed(2)}</strong> before
-              placing your order. Use the same amount shown below.
-            </p>
-            <div className="flex flex-col items-center bg-secondary/20 rounded-2xl p-4 border border-border">
-              <img
-                src={QR_IMAGE_URL}
-                alt="PhonePe QR code — scan to pay"
-                className="w-full max-w-[280px] rounded-xl shadow-md bg-white"
-              />
-              <p className="mt-4 text-center text-sm font-semibold text-foreground">
-                Amount to pay: <span className="text-primary text-lg">Rs. {payableTotal.toFixed(2)}</span>
+          {!onlyServices && (
+            <div className="bg-white p-6 sm:p-8 rounded-3xl border-2 border-primary/20 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <QrCode className="text-primary" size={22} />
+                <h2 className="text-xl font-bold text-foreground">Pay with UPI (PhonePe)</h2>
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                Scan the QR code and pay <strong className="text-foreground">Rs. {payableTotal.toFixed(2)}</strong> before
+                placing your order. Use the same amount shown below.
               </p>
-              <p className="mt-1 text-xs text-muted-foreground text-center">
-                Scan &amp; pay using PhonePe or any UPI app, then tap Place Order.
-              </p>
+              <div className="flex flex-col items-center bg-secondary/20 rounded-2xl p-4 border border-border">
+                <img
+                  src={QR_IMAGE_URL}
+                  alt="PhonePe QR code — scan to pay"
+                  className="w-full max-w-[280px] rounded-xl shadow-md bg-white"
+                />
+                <p className="mt-4 text-center text-sm font-semibold text-foreground">
+                  Amount to pay: <span className="text-primary text-lg">Rs. {payableTotal.toFixed(2)}</span>
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground text-center">
+                  Scan &amp; pay using PhonePe or any UPI app, then tap Place Order.
+                </p>
+              </div>
             </div>
-          </div>
+          )}
 
           <button
             type="submit"
             disabled={loading || !isAddressComplete}
             className="w-full bg-primary text-primary-foreground py-4 rounded-xl font-bold text-lg hover:bg-primary/90 transition-all shadow-lg shadow-primary/30 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {loading ? 'Placing Order...' : `Place Order — Rs. ${payableTotal.toFixed(2)}`}
+            {loading ? 'Placing Order...' : onlyServices ? 'Place Order' : `Place Order — Rs. ${payableTotal.toFixed(2)}`}
           </button>
           {!isAddressComplete && (
             <p className="text-xs text-center text-amber-700">
               Complete all shipping fields (including a valid 6-digit PIN code) to place your order.
             </p>
           )}
-          <p className="text-xs text-center text-muted-foreground">
-            By placing the order you confirm that you have completed the UPI payment for the total amount.
-          </p>
+          {!onlyServices && (
+            <p className="text-xs text-center text-muted-foreground">
+              By placing the order you confirm that you have completed the UPI payment for the total amount.
+            </p>
+          )}
         </form>
 
         <div>
@@ -392,6 +408,8 @@ export function Checkout() {
             <div className="space-y-4 mb-6">
               {checkoutItems.map((item) => {
                 const np = normalizeProduct(item);
+                const qty = item.cartQuantity === '' ? 0 : Number(item.cartQuantity ?? 1);
+                const unitLabel = item.unit || 'pcs';
                 return (
                   <div key={np.displayId} className="flex items-center gap-4">
                     <img
@@ -401,9 +419,13 @@ export function Checkout() {
                     />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-foreground truncate">{np.displayName}</p>
-                      <p className="text-sm text-muted-foreground">Qty: 1</p>
+                      <p className="text-sm text-muted-foreground">Qty: {qty} ({unitLabel})</p>
                     </div>
-                    <span className="font-bold">Rs. {np.displayPrice}</span>
+                    {isService(item) ? (
+                      <span className="text-sm font-semibold text-primary">Contact for pricing</span>
+                    ) : (
+                      <span className="font-bold">Rs. {(np.displayPrice * qty).toFixed(2)}</span>
+                    )}
                   </div>
                 );
               })}
@@ -411,15 +433,29 @@ export function Checkout() {
             <div className="border-t border-border pt-4 space-y-2">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span className="font-bold">Rs. {total.toFixed(2)}</span>
+                {onlyServices ? (
+                  <span className="font-bold text-primary">Contact for pricing</span>
+                ) : (
+                  <span className="font-bold">Rs. {total.toFixed(2)}</span>
+                )}
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Shipping</span>
-                <span className="font-bold text-emerald-600">Free</span>
-              </div>
+              {!onlyServices && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Shipping / Delivery</span>
+                  {deliveryChargesTotal > 0 ? (
+                    <span className="font-bold">Rs. {deliveryChargesTotal.toFixed(2)}</span>
+                  ) : (
+                    <span className="font-bold text-emerald-600">Free</span>
+                  )}
+                </div>
+              )}
               <div className="flex justify-between text-xl pt-2 border-t border-border">
                 <span className="font-bold">Total</span>
-                <span className="font-bold text-primary">Rs. {payableTotal.toFixed(2)}</span>
+                {onlyServices ? (
+                  <span className="font-bold text-primary">Contact for pricing</span>
+                ) : (
+                  <span className="font-bold text-primary">Rs. {payableTotal.toFixed(2)}</span>
+                )}
               </div>
             </div>
             <div className="mt-6 pt-6 border-t border-border hidden lg:block">

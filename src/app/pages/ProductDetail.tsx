@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Star, ShoppingCart, Heart, Shield, Package, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Star, ShoppingCart, Heart, Shield, Package, RotateCcw, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
 import { Product, normalizeProduct } from '../data/products';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
@@ -47,6 +47,32 @@ export function ProductDetail() {
   const [reviewLoading, setReviewLoading] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [selectedSizeLabel, setSelectedSizeLabel] = useState('');
+  const [selectedQty, setSelectedQty] = useState<number | ''>('');
+
+  const handleKgChange = (val: string | number) => {
+    if (val === '') {
+      setSelectedQty('');
+      return;
+    }
+    const isKg = product?.unit === 'kg';
+    const numVal = Number(val);
+    const maxVal = isKg ? 1000 : 10000;
+    const clean = Math.max(0, Math.min(maxVal, numVal));
+    if (isNaN(clean)) {
+      setSelectedQty('');
+    } else {
+      setSelectedQty(isKg ? Number(clean.toFixed(3)) : Math.floor(clean));
+    }
+  };
+
+  const handleGramChange = (val: string | number) => {
+    if (val === '') {
+      setSelectedQty('');
+      return;
+    }
+    const clean = Math.max(0, Math.min(1000000, Number(val)));
+    setSelectedQty(isNaN(clean) ? '' : Number((clean / 1000).toFixed(3)));
+  };
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -114,6 +140,9 @@ export function ProductDetail() {
   }, [product]);
 
   useEffect(() => {
+    if (product) {
+      setSelectedQty(1);
+    }
     const options = Array.isArray(product?.sizeOptions) ? product.sizeOptions : [];
     if (options.length === 0) {
       setSelectedSizeLabel('');
@@ -158,10 +187,11 @@ export function ProductDetail() {
           unit: selectedSize.label,
         }
       : product;
-    addToCart(payload as Product);
-    toast.success(`${np.displayName} added to cart`);
+    addToCart(payload as Product, selectedQty === '' ? 0 : selectedQty);
+    const unitLabel = product.unit === 'kg' ? 'kg' : product.unit || 'pcs';
+    toast.success(`${np.displayName} (${selectedQty} ${unitLabel}) added to cart`);
   };
-
+ 
   const handleBuyNow = () => {
     const payload = selectedSize
       ? {
@@ -172,7 +202,8 @@ export function ProductDetail() {
           unit: selectedSize.label,
         }
       : product;
-    goToCheckout(navigate, { buyNowProduct: payload as Product });
+    const checkoutProduct = { ...payload, cartQuantity: selectedQty === '' ? 0 : selectedQty };
+    goToCheckout(navigate, { buyNowProduct: checkoutProduct as Product });
   };
 
   const handleWishlist = () => {
@@ -249,7 +280,8 @@ export function ProductDetail() {
 
   const catName = typeof product.category === 'string' ? product.category : product.category?.name || '';
   const quantity = Number(product.quantity || 0);
-  const isOutOfStock = quantity <= 0;
+  const service = isService(product);
+  const isOutOfStock = !service && quantity <= 0;
   const aboutItems = Array.isArray(product.aboutItems) ? product.aboutItems : [];
   const groupedSpecs = Array.isArray(product.specifications)
     ? product.specifications.reduce((acc: Record<string, Array<{ key: string; value: string }>>, item: any) => {
@@ -278,7 +310,18 @@ export function ProductDetail() {
   return (
     <main className="container mx-auto px-4 pt-36 pb-12 min-h-screen">
       <div className="mb-8">
-        <Link to="/shop" className="text-muted-foreground hover:text-primary transition-colors">
+        <Link 
+          to="/shop" 
+          onClick={(e) => {
+            e.preventDefault();
+            if (window.history.state && window.history.state.idx > 0) {
+              navigate(-1);
+            } else {
+              navigate('/shop');
+            }
+          }}
+          className="text-muted-foreground hover:text-primary transition-colors"
+        >
           ← Back to Shop
         </Link>
       </div>
@@ -357,15 +400,21 @@ export function ProductDetail() {
           </div>
 
           <div className="flex items-end gap-3 mb-8">
-            <span className="text-4xl font-bold text-foreground">₹{displayPrice.toFixed(2)}</span>
-            {displayOriginalPrice > displayPrice && (
-              <span className="text-xl text-muted-foreground line-through mb-1">
-                ₹{displayOriginalPrice.toFixed(2)}
-              </span>
+            {service ? (
+              <span className="text-3xl font-bold text-primary">Contact for pricing</span>
+            ) : (
+              <>
+                <span className="text-4xl font-bold text-foreground">₹{displayPrice.toFixed(2)}</span>
+                {displayOriginalPrice > displayPrice && (
+                  <span className="text-xl text-muted-foreground line-through mb-1">
+                    ₹{displayOriginalPrice.toFixed(2)}
+                  </span>
+                )}
+              </>
             )}
           </div>
           <div className={`mb-6 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${isOutOfStock ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-700'}`}>
-            {isOutOfStock ? 'Out of Stock' : `In Stock (${quantity})`}
+            {isOutOfStock ? 'Out of Stock' : service ? 'Available' : `In Stock (${quantity})`}
           </div>
 
           <p className="text-muted-foreground mb-8 text-lg leading-relaxed">
@@ -385,21 +434,144 @@ export function ProductDetail() {
             )}
           </div>
 
+          {/* Quantity Input Section */}
+          {!isOutOfStock && !service && (
+            <div className="mb-6 border border-border rounded-2xl p-4 bg-secondary/10">
+              {product.unit === 'kg' ? (
+                <div>
+                  <h3 className="font-bold text-foreground mb-3 flex items-center gap-2 text-sm">
+                    <Package size={16} className="text-primary" /> Choose Quantity (in kg or grams)
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                        Weight (kg)
+                      </label>
+                      <div className="flex items-center border border-border bg-white rounded-xl overflow-hidden">
+                        <button
+                          type="button"
+                          onClick={() => handleKgChange(Number(selectedQty || 0) - 0.25)}
+                          className="px-2.5 py-1.5 bg-secondary/40 hover:bg-secondary text-foreground font-bold text-xs"
+                        >
+                          -
+                        </button>
+                        <input
+                          type="number"
+                          step="0.05"
+                          min="0"
+                          value={selectedQty}
+                          onChange={(e) => handleKgChange(e.target.value)}
+                          className="w-full text-center outline-none font-semibold text-foreground text-sm py-1.5"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleKgChange(Number(selectedQty || 0) + 0.25)}
+                          className="px-2.5 py-1.5 bg-secondary/40 hover:bg-secondary text-foreground font-bold text-xs"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                        Weight (grams)
+                      </label>
+                      <div className="flex items-center border border-border bg-white rounded-xl overflow-hidden">
+                        <button
+                          type="button"
+                          onClick={() => handleGramChange(Math.round(Number(selectedQty || 0) * 1000) - 250)}
+                          className="px-2.5 py-1.5 bg-secondary/40 hover:bg-secondary text-foreground font-bold text-xs"
+                        >
+                          -
+                        </button>
+                        <input
+                          type="number"
+                          step="50"
+                          min="0"
+                          value={selectedQty === '' ? '' : Math.round(Number(selectedQty) * 1000)}
+                          onChange={(e) => handleGramChange(e.target.value)}
+                          className="w-full text-center outline-none font-semibold text-foreground text-sm py-1.5"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleGramChange(Math.round(Number(selectedQty || 0) * 1000) + 250)}
+                          className="px-2.5 py-1.5 bg-secondary/40 hover:bg-secondary text-foreground font-bold text-xs"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {[0.1, 0.25, 0.5, 1, 2, 5].map((val) => {
+                      const label = val >= 1 ? `${val} kg` : `${val * 1000}g`;
+                      const active = selectedQty !== '' && Math.abs(selectedQty - val) < 0.001;
+                      return (
+                        <button
+                          type="button"
+                          key={val}
+                          onClick={() => handleKgChange(val)}
+                          className={`px-2 py-1 rounded-lg border text-[11px] font-semibold transition-all ${
+                            active
+                              ? 'border-primary bg-primary text-primary-foreground shadow-sm shadow-primary/20'
+                              : 'border-border bg-white text-muted-foreground hover:bg-secondary/30'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                    Select Quantity
+                  </label>
+                  <div className="flex items-center border border-border bg-white rounded-xl overflow-hidden w-full max-w-[150px]">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedQty((prev) => Math.max(0, Number(prev || 0) - 1))}
+                      className="px-3 py-1.5 bg-secondary/40 hover:bg-secondary text-foreground font-bold text-sm"
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={selectedQty}
+                      onChange={(e) => handleKgChange(e.target.value)}
+                      className="w-full text-center outline-none font-semibold text-foreground text-sm py-1.5"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setSelectedQty((prev) => Number(prev || 0) + 1)}
+                      className="px-3 py-1.5 bg-secondary/40 hover:bg-secondary text-foreground font-bold text-sm"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex flex-col sm:flex-row gap-4 mb-8">
             <button 
               onClick={handleAddToCart}
-              disabled={isOutOfStock}
-              className="flex-[2] bg-secondary text-foreground py-4 rounded-xl font-bold text-lg hover:bg-secondary/80 transition-all active:scale-[0.98] shadow-sm flex items-center justify-center gap-2"
+              disabled={isOutOfStock || selectedQty === '' || Number(selectedQty) <= 0}
+              className="flex-[2] bg-secondary text-foreground py-4 rounded-xl font-bold text-lg hover:bg-secondary/80 transition-all active:scale-[0.98] shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ShoppingCart size={22} />
-              Add to Cart
+              {service ? 'Book Service' : 'Add to Cart'}
             </button>
             <button 
               onClick={handleBuyNow}
-              disabled={isOutOfStock}
-              className="flex-[3] bg-primary text-primary-foreground py-4 rounded-xl font-bold text-lg hover:bg-primary/90 transition-all active:scale-[0.98] shadow-lg shadow-primary/30 flex items-center justify-center gap-2"
+              disabled={isOutOfStock || selectedQty === '' || Number(selectedQty) <= 0}
+              className="flex-[3] bg-primary text-primary-foreground py-4 rounded-xl font-bold text-lg hover:bg-primary/90 transition-all active:scale-[0.98] shadow-lg shadow-primary/30 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Buy Now
+              {service ? 'Book Now' : 'Buy Now'}
             </button>
             <button 
               onClick={handleWishlist}
@@ -440,7 +612,7 @@ export function ProductDetail() {
           </div>
         )}
 
-      {sizeOptions.length > 0 && (
+      {!service && sizeOptions.length > 0 && (
           <div className="mb-8">
             <h2 className="text-2xl font-bold mb-4">Size Options</h2>
             <div className="max-w-md space-y-3">

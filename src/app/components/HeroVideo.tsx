@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Volume2 } from 'lucide-react';
 
-const VIDEO_ID = 'asG7cwxi1sA';
+const VIDEO_ID = '5qWjeOgXot4';
 
 function loadYouTubeApi(): Promise<void> {
   if (window.YT?.Player) {

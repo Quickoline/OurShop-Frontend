@@ -1,4 +1,4 @@
-import type { Product } from './products';
+import type { Product, Category } from './products';
 import type { CatalogItemType } from '../config/shop';
 
 export function getCatalogType(item: Product): CatalogItemType {
@@ -98,4 +98,59 @@ export function getProductsByCategorySlug(products: Product[], slug: string, lim
       name.toLowerCase().includes(normalized)
     );
   }, limit);
+}
+
+export function getCategoryLabel(product: Product): string {
+  const cat = product.category;
+  if (typeof cat === 'string' && cat.trim()) return cat.trim();
+  if (cat && typeof cat === 'object' && cat.name) return String(cat.name).trim();
+  return 'Other';
+}
+
+export function getCategorySlug(product: Product): string {
+  const cat = product.category;
+  if (cat && typeof cat === 'object' && cat.slug) {
+    return String(cat.slug).toLowerCase();
+  }
+  return getCategoryLabel(product).toLowerCase().replace(/\s+/g, '-');
+}
+
+export type CategoryGroup = {
+  key: string;
+  name: string;
+  slug: string;
+  items: Product[];
+};
+
+export function groupProductsByCategory(
+  items: Product[],
+  categoryOrder: Category[] = []
+): CategoryGroup[] {
+  const orderIndex = new Map<string, number>();
+  categoryOrder.forEach((category, index) => {
+    orderIndex.set(category.name.toLowerCase(), index);
+    if (category.slug) orderIndex.set(category.slug.toLowerCase(), index);
+  });
+
+  const groups = new Map<string, CategoryGroup>();
+  for (const item of items) {
+    const name = getCategoryLabel(item);
+    const key = name.toLowerCase();
+    if (!groups.has(key)) {
+      groups.set(key, {
+        key,
+        name,
+        slug: getCategorySlug(item),
+        items: [],
+      });
+    }
+    groups.get(key)!.items.push(item);
+  }
+
+  return Array.from(groups.values()).sort((a, b) => {
+    const ai = orderIndex.has(a.key) ? orderIndex.get(a.key)! : 9999;
+    const bi = orderIndex.has(b.key) ? orderIndex.get(b.key)! : 9999;
+    if (ai !== bi) return ai - bi;
+    return a.name.localeCompare(b.name);
+  });
 }

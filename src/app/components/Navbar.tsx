@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
 import { normalizeProduct } from '../data/products';
+import { isService } from '../data/catalogHelpers';
 import { orderApi } from '../services/api';
 import { shop, buildNavLinks } from '../config/shop';
 
@@ -178,7 +179,11 @@ export function Navbar() {
                               <h4 className="text-[15px] font-semibold text-gray-800 line-clamp-1">{np.displayName}</h4>
                               <p className="text-xs text-gray-500 font-medium">{catName}</p>
                             </div>
-                            <span className="text-sm font-bold text-primary">Rs. {np.displayPrice}</span>
+                            {isService(product) ? (
+                              <span className="text-xs font-semibold text-primary">Contact for pricing</span>
+                            ) : (
+                              <span className="text-sm font-bold text-primary">Rs. {np.displayPrice}</span>
+                            )}
                           </Link>
                         );
                       })}
@@ -529,7 +534,11 @@ export function Navbar() {
                             <h4 className="text-[15px] font-semibold text-gray-800 line-clamp-1">{np.displayName}</h4>
                             <p className="text-xs text-gray-500 font-medium">{catName}</p>
                           </div>
-                          <span className="text-sm font-bold text-primary">Rs. {np.displayPrice}</span>
+                          {isService(product) ? (
+                            <span className="text-xs font-semibold text-primary">Contact for pricing</span>
+                          ) : (
+                            <span className="text-sm font-bold text-primary">Rs. {np.displayPrice}</span>
+                          )}
                         </Link>
                       );
                     })}

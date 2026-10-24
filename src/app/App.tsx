@@ -1,4 +1,6 @@
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, useParams } from 'react-router-dom';
+import { orderApi } from './services/api';
 import { Toaster } from './components/ui/sonner';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
@@ -43,10 +45,28 @@ import { ShopProvider } from './context/ShopContext';
 import { AuthProvider } from './context/AuthContext';
 import { ScrollToTop } from './components/ScrollToTop';
 
-const CHECKOUT_QR_URL = '/qr%20shop.jpeg';
+const CHECKOUT_QR_URL = '/qr-shop.png';
 
 function OrderSuccessPage() {
   const { orderId } = useParams<{ orderId: string }>();
+  const [onlyServices, setOnlyServices] = useState(false);
+
+  useEffect(() => {
+    const fetchOrder = async () => {
+      if (!orderId) return;
+      try {
+        const res = await orderApi.getById(orderId);
+        if (res.success && res.data) {
+          const items = res.data.orderItems || res.data.cartItems || [];
+          const allServices = items.length > 0 && items.every((item: any) => item.itemType === 'service' || item.service || item.serviceId);
+          setOnlyServices(allServices);
+        }
+      } catch {
+        // ignore
+      }
+    };
+    fetchOrder();
+  }, [orderId]);
 
   return (
     <main className="container mx-auto px-4 py-32 min-h-screen">
@@ -58,14 +78,18 @@ function OrderSuccessPage() {
         <p className="text-muted-foreground text-lg mb-4">
           Order ID: <span className="font-semibold text-foreground">{orderId}</span>
         </p>
-        <p className="text-sm text-muted-foreground mb-6">
-          If you have not paid yet, scan the UPI QR below. We will confirm your order after payment verification.
-        </p>
-        <img
-          src={CHECKOUT_QR_URL}
-          alt="PhonePe QR code"
-          className="mx-auto w-full max-w-[220px] rounded-xl border border-border shadow-sm mb-8"
-        />
+        {!onlyServices && (
+          <>
+            <p className="text-sm text-muted-foreground mb-6">
+              If you have not paid yet, scan the UPI QR below. We will confirm your order after payment verification.
+            </p>
+            <img
+              src={CHECKOUT_QR_URL}
+              alt="PhonePe QR code"
+              className="mx-auto w-full max-w-[220px] rounded-xl border border-border shadow-sm mb-8"
+            />
+          </>
+        )}
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link

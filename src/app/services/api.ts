@@ -136,7 +136,7 @@ export const userApi = {
     name: string,
     email: string,
     password: string,
-    referralCode?: string
+    referralCode: string
   ) => {
     return await request<any>('/api/user', {
       method: 'POST',
@@ -144,7 +144,7 @@ export const userApi = {
         name,
         email,
         password,
-        ...(referralCode?.trim() ? { referralCode: referralCode.trim() } : {}),
+        referralCode: referralCode.trim().toUpperCase(),
       }),
       skipAuth: true,
     });
@@ -195,6 +195,19 @@ export const cartApi = {
   ) =>
     request<any>('/api/cart/add', {
       method: 'POST',
+      body: JSON.stringify(
+        itemType === 'service'
+          ? { serviceId: itemId, itemType: 'service', quantity }
+          : { productId: itemId, itemType: 'product', quantity }
+      ),
+    }),
+  update: (
+    itemId: string,
+    quantity: number,
+    itemType: 'product' | 'service' = 'product'
+  ) =>
+    request<any>('/api/cart/update', {
+      method: 'PUT',
       body: JSON.stringify(
         itemType === 'service'
           ? { serviceId: itemId, itemType: 'service', quantity }

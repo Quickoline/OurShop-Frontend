@@ -7,7 +7,7 @@ export function AccountWishlist() {
   const { wishlist, toggleWishlist, addToCart, isInCart } = useShop();
 
   const getProductId = (p: any) => p._id || String(p.id);
-  const getProductSlug = (p: any) => p.slug || p._id || String(p.id);
+  const getProductSlug = (p: any) => p._id || String(p.id);
 
   return (
     <div>

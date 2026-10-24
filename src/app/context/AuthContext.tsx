@@ -18,7 +18,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string, referralCode?: string) => Promise<void>;
+  signup: (name: string, email: string, password: string, referralCode: string) => Promise<void>;
   setSession: (authToken: string, authUser: AuthUser) => void;
   logout: () => void;
 }
@@ -89,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('auth_user', JSON.stringify(userData));
   };
 
-  const signup = async (name: string, email: string, password: string, referralCode?: string) => {
+  const signup = async (name: string, email: string, password: string, referralCode: string) => {
     await userApi.register(name, email, password, referralCode);
     await login(email, password);
   };

@@ -1,8 +1,11 @@
 import { useShop } from '../context/ShopContext';
 import { Link } from 'react-router-dom';
+import { CategoryIcon } from '../utils/categoryIcon';
+import { useScrollRestoration } from '../utils/scroll';
 
 export function CategoryList() {
   const { categories } = useShop();
+  useScrollRestoration(false);
 
   return (
     <main className="container mx-auto px-4 pt-36 pb-12">
@@ -14,13 +17,8 @@ export function CategoryList() {
             to={`/category/${(category.slug || category.name).toLowerCase()}`}
             className="group block"
           >
-            <div className="relative aspect-square rounded-full overflow-hidden mb-4 bg-secondary">
-              <img
-                src={category.image}
-                alt={category.name}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors duration-300" />
+            <div className="flex justify-center mb-4">
+              <CategoryIcon category={category} size="lg" rounded="full" />
             </div>
             <h3 className="text-center text-lg font-medium text-foreground group-hover:text-primary transition-colors">
               {category.name}

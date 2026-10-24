@@ -89,6 +89,11 @@ export function Login() {
     e.preventDefault();
     setError('');
 
+    if (isSignUp && !referralCode.trim()) {
+      setError('Referral code is required to create an account.');
+      return;
+    }
+
     if (isSignUp && !isAdultConfirmed) {
       setError('You must confirm that you are 18 years or older to register.');
       return;
@@ -187,15 +192,19 @@ export function Login() {
           {isSignUp && (
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Referral code (optional)
+                Referral code <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 placeholder="Enter sponsor referral code"
                 value={referralCode}
                 onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                required
                 className="input-modern"
               />
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                Ask your sponsor for their code — registration requires a valid referral.
+              </p>
             </div>
           )}
 
@@ -213,7 +222,7 @@ export function Login() {
 
           <button
             type="submit"
-            disabled={loading || (isSignUp && !isAdultConfirmed)}
+            disabled={loading || (isSignUp && (!isAdultConfirmed || !referralCode.trim()))}
             className="w-full bg-primary text-primary-foreground py-4 rounded-xl font-bold text-lg hover:bg-primary/90 transition-all shadow-lg shadow-primary/30 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {loading ? 'Please wait...' : isSignUp ? 'Create Account' : 'Sign In'}
