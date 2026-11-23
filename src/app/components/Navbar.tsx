@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, User, Heart, ShoppingCart, Menu, X, LogOut, ChevronDown, Package, MapPin, Settings, Wallet, Gift } from 'lucide-react';
+import { Search, User, Heart, ShoppingCart, Menu, X, LogOut, ChevronDown, Package, MapPin, Settings, Wallet, Gift, Smartphone } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
@@ -218,6 +218,14 @@ export function Navbar() {
             >
               <Gift size={18} />
               <span>Refer &amp; Earn</span>
+            </Link>
+            <Link
+              to="/download-app"
+              className="hidden xl:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-primary/25 bg-primary/5 text-primary hover:bg-primary/10 transition-colors text-[13px] font-semibold"
+              title="Download Android App"
+            >
+              <Smartphone size={16} />
+              <span>Download App</span>
             </Link>
             <Link
               to={walletHref}
@@ -625,6 +633,18 @@ export function Navbar() {
                 >
                   <Gift size={18} />
                   Refer &amp; Earn
+                </Link>
+              </div>
+
+              {/* Mobile Download App Link */}
+              <div className="px-4 py-2 border-b border-gray-100">
+                <Link
+                  to="/download-app"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/30 text-sm font-bold shadow-sm"
+                >
+                  <Smartphone size={18} className="text-amber-600 dark:text-amber-400" />
+                  📱 Download Android App (APK)
                 </Link>
               </div>
 

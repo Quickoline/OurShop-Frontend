@@ -1,8 +1,7 @@
 import { motion } from 'motion/react';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Download, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { shop } from '../config/shop';
-import { HeroVideo } from './HeroVideo';
 
 export function HeroSection() {
   return (
@@ -39,10 +38,6 @@ export function HeroSection() {
               </span>
             </h1>
 
-            <div className="mt-6 max-w-xl mx-auto lg:mx-0 rounded-2xl overflow-hidden ring-1 ring-white/20 shadow-2xl aspect-video">
-              <HeroVideo />
-            </div>
-
             <p className="mt-6 text-lg text-slate-300 max-w-lg mx-auto lg:mx-0 leading-relaxed">
               {shop.isDualCatalog
                 ? 'Shop physical products with fast delivery, or book trusted services for home, business, and wellness — all in one place.'
@@ -57,10 +52,11 @@ export function HeroSection() {
                     <ArrowRight size={20} />
                   </Link>
                   <Link
-                    to="/shop?type=service"
+                    to="/download-app"
                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/5 text-white font-semibold px-8 py-3.5 backdrop-blur-sm hover:bg-white/10 transition-all"
                   >
-                    Book {shop.services.title}
+                    <Download size={18} />
+                    Download App
                   </Link>
                 </>
               ) : (
@@ -70,10 +66,11 @@ export function HeroSection() {
                     <ArrowRight size={20} />
                   </Link>
                   <Link
-                    to="/category"
+                    to="/download-app"
                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/5 text-white font-semibold px-8 py-3.5 backdrop-blur-sm hover:bg-white/10 transition-all"
                   >
-                    View categories
+                    <Download size={18} />
+                    Download App
                   </Link>
                 </>
               )}

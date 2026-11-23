@@ -27,6 +27,7 @@ import { Collection } from './pages/Collection';
 import { DiscoverPage } from './pages/DiscoverPage';
 import { OffersPage } from './pages/OffersPage';
 import { PolicyPage } from './pages/PolicyPage';
+import { DownloadApp } from './pages/DownloadApp';
 
 // Account Pages
 import { AccountLayout } from './components/AccountLayout';
@@ -148,6 +149,8 @@ export default function App() {
             <Route path="/policy/:slug" element={<PolicyPage />} />
             <Route path="/privacy-policy" element={<PolicyPage forcedSlug="privacy-policy" />} />
             <Route path="/terms-and-conditions" element={<PolicyPage forcedSlug="terms-and-conditions" />} />
+            <Route path="/download-app" element={<DownloadApp />} />
+            <Route path="/download" element={<DownloadApp />} />
 
             {/* Account Dashboard with Sidebar */}
             <Route

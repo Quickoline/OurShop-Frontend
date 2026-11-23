@@ -119,6 +119,16 @@ export function getPolicies(): Record<string, PolicyContent> {
           ],
         },
         {
+          heading: 'Google API Services User Data Policy & AI NCII Compliance',
+          points: [
+            `${name}'s use and transfer of information received from Google APIs to any other app will adhere to the Google API Services User Data Policy, including the Limited Use requirements.`,
+            `Purpose of Google API Integration: Google Drive APIs are utilized strictly by store administrators and verified merchants to store, host, and serve product catalog images, item descriptions, and service promotional videos on ${name}.`,
+            `No AI NCII Usage: ${name} does NOT use Google APIs or user data to create, train, process, generate, or distribute Artificial Intelligence (AI) content, synthetic media, or AI-generated Non-Consensual Intimate Imagery (AI NCII).`,
+            'Data Protection: Google user data and files are never transferred, sold, or shared with third parties, data brokers, or external advertising networks. Access is limited solely to the functionality required to upload and display store catalog media.',
+            'Data Retention & Revocation: Users and merchants can disconnect Google Drive integration at any time through application settings, upon which token credentials and session access are immediately purged.',
+          ],
+        },
+        {
           heading: 'Cookies and tracking',
           points: [
             'Cookies and similar technologies are used for session management, analytics, and improved user experience.',

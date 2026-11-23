@@ -7,6 +7,7 @@ const quickLinks = [
   { label: 'About', href: '/discover/about-us' },
   { label: 'Mega Offers', href: '/offers/mega-offers' },
   { label: 'Contact', href: '/contact' },
+  { label: '📱 Download App', href: '/download-app' },
 ];
 
 const policyLinks = [
@@ -63,6 +64,28 @@ export function Footer() {
               )}
             </div>
           ))}
+        </div>
+
+        {/* Google API & Application Purpose Disclosure */}
+        <div className="mt-8 pt-6 border-t border-white/10 text-xs text-slate-400 leading-relaxed text-left max-w-4xl mx-auto">
+          <p className="font-semibold text-slate-300">
+            About {shop.name} &amp; Google API Compliance:
+          </p>
+          <p className="mt-1">
+            {shop.name} is an e-commerce platform that allows users to shop daily essentials, groceries, and trusted local services with transparent pricing. Google Drive APIs are used solely by authorized store merchants and administrators for cloud storage and management of product and service catalog media (photos and videos).
+          </p>
+          <p className="mt-1">
+            {shop.name} does not use Google APIs to create, process, generate, host, or distribute Artificial Intelligence (AI) content or AI-generated Non-Consensual Intimate Imagery (AI NCII). All use of Google user data adheres strictly to the{' '}
+            <a
+              href="https://developers.google.com/terms/api-services-user-data-policy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline hover:text-primary/80"
+            >
+              Google API Services User Data Policy
+            </a>
+            , including the Limited Use requirements.
+          </p>
         </div>
       </div>
     </footer>
