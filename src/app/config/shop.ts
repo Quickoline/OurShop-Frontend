@@ -50,11 +50,11 @@ const catalogKind = parseCatalogKind(env('VITE_CATALOG_LABEL', 'both'));
 
 /** Central shop branding — customize via VITE_* env vars in .env */
 export const shop = {
-  name: env('VITE_SHOP_NAME', 'TBS Veda'),
-  tagline: env('VITE_SHOP_TAGLINE', 'The Best Solution'),
-  supportEmail: env('VITE_SHOP_SUPPORT_EMAIL', 'support@tbsveda.com'),
-  logo: env('VITE_SHOP_LOGO', '/logo-tbs-veda.png'),
-  socialHandle: env('VITE_SHOP_SOCIAL_HANDLE', 'tbsveda'),
+  name: env('VITE_SHOP_NAME', 'QuickoShop'),
+  tagline: env('VITE_SHOP_TAGLINE', 'Everyday Essentials, Groceries & Local Services'),
+  supportEmail: env('VITE_SHOP_SUPPORT_EMAIL', 'support@quickoshop.com'),
+  logo: env('VITE_SHOP_LOGO', '/logo.png'),
+  socialHandle: env('VITE_SHOP_SOCIAL_HANDLE', 'quickoshop'),
   catalogKind,
   catalog: catalogLabels[catalogKind],
   products: catalogLabels.products,
