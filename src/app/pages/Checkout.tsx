@@ -61,15 +61,14 @@ export function Checkout() {
     return sum + itemPrice * qty;
   }, 0);
 
-  const deliveryChargesTotal = checkoutItems.reduce((sum, item) => {
-    const np = normalizeProduct(item);
-    const qty = item.cartQuantity === '' ? 0 : Number(item.cartQuantity ?? 1);
-    const charges = isService(item) ? 0 : Number((np as any).deliveryCharges || 0);
-    return sum + charges * qty;
-  }, 0);
+  const onlyServices = checkoutItems.length > 0 && checkoutItems.every(isService);
+  // Delivery Fee Policy:
+  // - Orders containing only services: Free (₹0)
+  // - Orders with physical products >= ₹500: Free (₹0)
+  // - Orders with physical products < ₹500: Flat ₹50
+  const deliveryChargesTotal = onlyServices ? 0 : total >= 500 ? 0 : 50;
 
   const payableTotal = total + deliveryChargesTotal;
-  const onlyServices = checkoutItems.length > 0 && checkoutItems.every(isService);
 
   const isAddressComplete = useMemo(() => {
     const name = formData.name.trim();

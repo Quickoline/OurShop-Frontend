@@ -190,20 +190,36 @@ export function Cart() {
               </div>
             )}
 
-            <div className="space-y-4 mb-6 text-lg">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span className="font-bold text-foreground">Rs. {total.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Shipping</span>
-                <span className="font-bold text-emerald-600">Free</span>
-              </div>
-              <div className="border-t border-border pt-4 flex justify-between text-xl mt-4">
-                <span className="font-bold">Total</span>
-                <span className="font-bold text-primary">Rs. {total.toFixed(2)}</span>
-              </div>
-            </div>
+            {(() => {
+              const onlyServices = cart.length > 0 && cart.every(isService);
+              const shippingFee = onlyServices ? 0 : (total >= 500 ? 0 : 50);
+              const payableTotal = total + shippingFee;
+              return (
+                <div className="space-y-4 mb-6 text-lg">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Subtotal</span>
+                    <span className="font-bold text-foreground">Rs. {total.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Shipping</span>
+                    {shippingFee === 0 ? (
+                      <span className="font-bold text-emerald-600">Free Delivery</span>
+                    ) : (
+                      <span className="font-bold text-foreground">Rs. {shippingFee.toFixed(2)}</span>
+                    )}
+                  </div>
+                  {!onlyServices && total < 500 && (
+                    <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium">
+                      💡 Add Rs. {(500 - total).toFixed(0)} more of products to get <strong>FREE delivery</strong>!
+                    </div>
+                  )}
+                  <div className="border-t border-border pt-4 flex justify-between text-xl mt-4">
+                    <span className="font-bold">Total</span>
+                    <span className="font-bold text-primary">Rs. {payableTotal.toFixed(2)}</span>
+                  </div>
+                </div>
+              );
+            })()}
 
             <button
               type="button"
