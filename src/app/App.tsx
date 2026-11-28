@@ -151,6 +151,9 @@ export default function App() {
             <Route path="/terms-and-conditions" element={<PolicyPage forcedSlug="terms-and-conditions" />} />
             <Route path="/download-app" element={<DownloadApp />} />
             <Route path="/download" element={<DownloadApp />} />
+            <Route path="/important-information" element={<DownloadApp />} />
+            <Route path="/important-notice" element={<DownloadApp />} />
+            <Route path="/notice" element={<DownloadApp />} />
 
             {/* Account Dashboard with Sidebar */}
             <Route

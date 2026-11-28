@@ -8,6 +8,7 @@ const quickLinks = [
   { label: 'Mega Offers', href: '/offers/mega-offers' },
   { label: 'Contact', href: '/contact' },
   { label: '📱 Download App', href: '/download-app' },
+  { label: '📢 महत्वपूर्ण सूचना (Important Notice)', href: '/important-notice' },
 ];
 
 const policyLinks = [

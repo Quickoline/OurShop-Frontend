@@ -47,6 +47,9 @@ export function Home() {
             </p>
 
             <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-slate-100 text-sm font-semibold">
+              <Link to="/important-notice" className="text-amber-700 dark:text-amber-400 font-bold hover:underline">
+                📢 महत्वपूर्ण सूचना (Important Notice) &rarr;
+              </Link>
               <Link to="/shop" className="text-primary hover:underline">
                 Explore Catalog &rarr;
               </Link>
